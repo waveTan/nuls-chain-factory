@@ -45,6 +45,11 @@ export default new Router({
       component: resolve => require(['@/views/module/ModuleInfo.vue'], resolve)
     },
     {
+      path: '/Module/add',
+      name: 'moduleAdd',
+      component: resolve => require(['@/views/module/ModuleAdd.vue'], resolve)
+    },
+    {
       path: '/Build',
       name: 'build',
       component: resolve => require(['@/views/build/Index.vue'], resolve)

@@ -4,7 +4,7 @@
       <h3 class="title">模块仓库</h3>
     </div>
     <div class="w1200 mt_30 info">
-      <div class="upload click font14"><i class="el-icon-cloudy font18"></i> 上传模块</div>
+      <div class="upload click font14" @click="toUrl('moduleAdd')"><i class="el-icon-cloudy font18"></i> 上传模块</div>
       <ul class="module_list">
         <li class="bg-white">
           <p class="bg-gray"><i class="el-icon-sunny fCN"></i><span class="font12 right">V 1.2.0</span></p>
