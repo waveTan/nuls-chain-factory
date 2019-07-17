@@ -6,13 +6,13 @@
       </div>
       <div class="nav fl">
         <el-menu :default-active="activeIndex" class="fl" mode="horizontal" @select="handleSelect">
-          <el-menu-item index="1"><i class="el-icon-share"></i>模块仓库</el-menu-item>
-          <el-menu-item index="3"><i class="el-icon-video-camera-solid"></i>搭建区块链</el-menu-item>
+          <el-menu-item index="module"><i class="el-icon-share"></i>模块仓库</el-menu-item>
+          <el-menu-item index="build"><i class="el-icon-video-camera-solid"></i>搭建区块链</el-menu-item>
         </el-menu>
         <el-link type="primary" @click="toUrl('newAddress')" class="user click fr tc" v-if="!accountAddress">登陆
         </el-link>
         <div v-else>
-          <i class="el-icon-s-custom click " @click="toUrl('backupsAddress')"></i>&nbsp;
+          <i class="el-icon-s-custom click " @click="toUrl('user')"></i>&nbsp;
           <span class="click tc" @click="signOut">退出</span>
         </div>
 
@@ -47,8 +47,10 @@
        * @param key
        * @param keyPath
        */
-      handleSelect(key, keyPath) {
-        console.log(key, keyPath);
+      handleSelect(key) {
+        this.$router.push({
+          name: key,
+        })
       },
 
       /**

@@ -15,6 +15,11 @@ export default new Router({
       component: Home
     },
     {
+      path: '/User',
+      name: 'user',
+      component: resolve => require(['@/views/user/User.vue'], resolve)
+    },
+    {
       path: '/NewAddress',
       name: 'newAddress',
       component: NewAddress
@@ -28,7 +33,22 @@ export default new Router({
       path: '/BackupsAddress',
       name: 'backupsAddress',
       component: BackupsAddress
-    }
+    },
+    {
+      path: '/Module',
+      name: 'module',
+      component: resolve => require(['@/views/module/ModuleList.vue'], resolve)
+    },
+    {
+      path: '/Module/Info',
+      name: 'moduleInfo',
+      component: resolve => require(['@/views/module/ModuleInfo.vue'], resolve)
+    },
+    {
+      path: '/Build',
+      name: 'build',
+      component: resolve => require(['@/views/build/Index.vue'], resolve)
+    },
 
   ]
 })
