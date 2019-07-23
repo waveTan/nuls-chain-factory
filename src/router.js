@@ -52,7 +52,7 @@ export default new Router({
     {
       path: '/Build',
       name: 'build',
-      component: resolve => require(['@/views/build/Index.vue'], resolve)
+      component: resolve => require(['@/views/build/Build.vue'], resolve)
     },
 
   ]

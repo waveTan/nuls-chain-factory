@@ -90,7 +90,7 @@
 
 .btn-next{
   .el-button{
-    width: 320px;
+    width: 300px;
   }
 }
 
@@ -115,6 +115,29 @@
       text-align: center;
       .el-button {
         width: 400px;
+      }
+    }
+  }
+}
+
+.el-steps{
+  margin: 50px 100px 0;
+  .el-step{
+    .el-step__head{
+      .el-step__line{
+        border-bottom: 2px dashed @Ncolour;
+        height: 0;
+      }
+      .el-step__icon{
+        border-radius: 50px;
+        border:@BD1;
+        width: 50px;
+        height: 50px;
+        margin-top: -12px;
+      }
+      .is-status{
+        color: @Ncolour;
+        font-size: 22px;
       }
     }
   }

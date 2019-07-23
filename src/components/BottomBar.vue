@@ -1,5 +1,5 @@
 <template>
-  <div class="bottom">
+  <div class="bottom bg-white">
     <div class="w1200">
       <div class="fl">
         <ul>
