@@ -60,8 +60,8 @@
       }
     }
 
-    .input-200{
-      .el-input__inner{
+    .input-200 {
+      .el-input__inner {
         width: 200px;
       }
     }
@@ -76,20 +76,20 @@
 }
 
 .el-table {
-  tr{
-    th{
+  tr {
+    th {
       padding: 8px 0;
       background-color: @Bcolour2;
     }
   }
- td{
-   padding: 1px 0 !important;
- }
+  td {
+    padding: 1px 0 !important;
+  }
 
 }
 
-.btn-next{
-  .el-button{
+.btn-next {
+  .el-button {
     width: 300px;
   }
 }
@@ -120,25 +120,41 @@
   }
 }
 
-.el-steps{
+.el-steps {
   margin: 50px 100px 0;
-  .el-step{
-    .el-step__head{
-      .el-step__line{
+  .el-step {
+    .el-step__head {
+      .el-step__line {
         border-bottom: 2px dashed @Ncolour;
         height: 0;
       }
-      .el-step__icon{
+      .el-step__icon {
         border-radius: 50px;
-        border:@BD1;
+        border: @BD1;
         width: 50px;
         height: 50px;
         margin-top: -12px;
       }
-      .is-status{
+      .is-status {
         color: @Ncolour;
         font-size: 22px;
       }
+    }
+  }
+}
+
+.el-radio {
+  .el-radio__input {
+
+  }
+  .is-checked {
+    color: @Ncolour !important;
+    .el-radio__inner {
+      border-color: @Ncolour !important;
+      background: @Ncolour !important;
+    }
+    .el-radio__label {
+      color: @Ncolour !important;
     }
   }
 }
