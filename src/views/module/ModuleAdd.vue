@@ -49,8 +49,6 @@
 </template>
 
 <script>
-  import {API_CHAIN_ID} from '@/config'
-  import {getAddressInfoByAddress} from '@/api/requestData'
   import BackBar from '@/components/BackBar'
 
   export default {

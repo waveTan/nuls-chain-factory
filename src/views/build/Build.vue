@@ -15,8 +15,8 @@
       </el-steps>
 
       <!--选择业务场景-->
-      <el-row class="steps" v-show="stepsActive ===0">
-        <el-col class="steps-scene">
+      <div class="steps" v-show="stepsActive ===0">
+        <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''" @click="changeSteps(1)">
           <h6>分布式账本版</h6>
           <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改。</p>
           <ul>
@@ -26,8 +26,8 @@
             <li>防伪溯源</li>
             <li>发票</li>
           </ul>
-        </el-col>
-        <el-col class="steps-scene">
+        </div>
+        <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''" @click="changeSteps(2)">
           <h6>分布式账本版</h6>
           <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改。</p>
           <ul>
@@ -37,8 +37,9 @@
             <li>防伪溯源</li>
             <li>发票</li>
           </ul>
-        </el-col>
-        <el-col class="steps-scene" style="margin: 0 0 0 30px">
+        </div>
+        <div class="steps-scene" style="margin: 0 0 0 30px" :class="isSteps===3 ? 'is-active' : ''"
+             @click="changeSteps(3)">
           <h6>分布式账本版</h6>
           <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改。</p>
           <ul>
@@ -48,35 +49,28 @@
             <li>防伪溯源</li>
             <li>发票</li>
           </ul>
-        </el-col>
+        </div>
         <el-button type="success" class="btn-next" @click="next">下一步</el-button>
-      </el-row>
+      </div>
 
       <!--填写基本信息-->
       <el-row class="steps-info" v-show="stepsActive ===1">
-        <el-form :model="infoForm" :rules="infoRules" ref="infoForm" status-icon class="steps-infoForm">
+        <el-form :model="infoForm" :rules="infoRules" ref="infoForm" status-icon class="steps-infoForm"
+                 :hide-required-asterisk="true">
           <el-form-item label="链名称" prop="name">
-            <el-input v-model="infoForm.name"></el-input>
+            <el-input v-model="infoForm.name" @change="changeName">
+            </el-input>
           </el-form-item>
-          <el-form-item label="链Logo" prop="name">
-            <!--<el-input v-model="infoForm.logoUrl"></el-input>-->
-            <el-upload
-                    class="avatar-uploader"
-                    action="https://jsonplaceholder.typicode.com/posts/"
-                    :show-file-list="false"
-                    :on-success="handleAvatarSuccess"
-                    :before-upload="beforeAvatarUpload">
-              <img v-if="infoForm.logoUrl" :src="infoForm.logoUrl" class="avatar">
-              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-            </el-upload>
+          <el-form-item label="链Logo" prop="logoUrl">
+            <UploadBar @func="getMsgFormSon"></UploadBar>
           </el-form-item>
-          <el-form-item label="通证简称" prop="name">
+          <el-form-item label="通证简称" prop="symbol">
             <el-input v-model="infoForm.symbol"></el-input>
           </el-form-item>
-          <el-form-item label="发行总量" prop="name">
+          <el-form-item label="发行总量" prop="total">
             <el-input v-model="infoForm.total"></el-input>
           </el-form-item>
-          <el-form-item label="精度" prop="name">
+          <el-form-item label="精度" prop="precision">
             <el-input v-model="infoForm.precision"></el-input>
           </el-form-item>
           <el-form-item label="高级" prop="delivery">
@@ -94,17 +88,18 @@
       <!--配置创世块-->
       <el-row class="steps-node" v-show="stepsActive ===2">
         <el-form :model="nodeForm" ref="nodeForm" class="steps-nodeForm">
-          <el-col class="address bg-gray" v-for="(domain, index) in nodeForm.addressList">
+          <el-col class="address bg-gray" v-for="(domain, index) in nodeForm.addressList" :key="index">
             <div class="node-address">
               <p>地址{{index}}:{{domain.address}}</p>
               <span>
                 <i class="el-icon-circle-plus-outline click" @click="addDomain"></i>
-                <i class="el-icon-remove-outline click" @click.prevent="removeDomain(domain)"></i>
+                <i class="el-icon-remove-outline click" @click.prevent="removeDomain(domain)"
+                   v-show="nodeForm.addressList.length !==1 "></i>
               </span>
             </div>
             <div class="node-form cb">
               <el-form-item label="通证数量" prop="pass" class="number fl">
-                <el-input v-model="domain.number"></el-input>
+                <el-input v-model.number="domain.number" type="number"></el-input>
               </el-form-item>
               <el-form-item label="锁定时间" prop="pass" class="time fr">
                 <el-date-picker v-model="domain.time" type="datetime" placeholder="选择日期时间" default-time="12:00:00">
@@ -117,16 +112,19 @@
               <el-button type="success" @click="nodeSubmitForm('nodeForm')">备份地址私钥</el-button>
             </div>
             <div class="btn">
-              <el-button @click="next">下一步</el-button>
+              <el-button @click="nodeNext">下一步</el-button>
             </div>
           </el-form-item>
         </el-form>
 
         <el-dialog title="备份地址私钥列" :visible.sync="backupsDialog" width="80%" class="backups-dialog">
           <el-table :data="addressKeyData" border>
-            <el-table-column property="nu" label="序号" width="50"></el-table-column>
-            <el-table-column property="address" label="地址" width="400"></el-table-column>
-            <el-table-column property="key" label="私钥" min-width="300"></el-table-column>
+            <el-table-column type="index" label="序号" width="50">
+            </el-table-column>
+            <el-table-column property="address" label="地址" width="400">
+            </el-table-column>
+            <el-table-column property="pri" label="私钥" min-width="300">
+            </el-table-column>
           </el-table>
           <!--<el-button type="success" class="btn-next">复制</el-button>-->
         </el-dialog>
@@ -145,7 +143,7 @@
         </div>
         <div class="btn-next tc">
           <div class="btn">
-            <el-link type="info">当前账户余额: 35656.225 <span class="fCN">NULS</span></el-link>
+            <el-link type="info">当前账户余额: {{accountInfo.balance}} <span class="fCN">NULS</span></el-link>
           </div>
           <div class="btn">
             <el-button type="success" @click="next">下一步</el-button>
@@ -165,18 +163,19 @@
             <div class="cloud-node" v-show="isApply==='0'">
               <el-form-item label="运行时间" prop="runTime">
                 <el-select v-model="applyForm.runTime" placeholder="">
-                  <el-option label="10K" value="0"></el-option>
-                  <el-option label="20K" value="1"></el-option>
+                  <el-option label="10K" value="10"></el-option>
+                  <el-option label="20K" value="20"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="节点" prop="node">
                 <el-select v-model="applyForm.node" placeholder="">
-                  <el-option label="1个" value="0"></el-option>
-                  <el-option label="5个" value="1"></el-option>
+                  <el-option label="1个" value="1"></el-option>
+                  <el-option label="5个" value="5"></el-option>
                 </el-select>
               </el-form-item>
               <el-form-item label="网络维护费" prop="netFee">
-                <el-input v-model="applyForm.netFee" placeholder="全部节点维护费"></el-input>
+                <el-input v-model="applyForm.netFee" placeholder="全部节点维护费" disabled>
+                </el-input>
                 <i class="el-icon-warning fr"></i>
               </el-form-item>
             </div>
@@ -204,15 +203,20 @@
         <div class="w700">
           <div class="title bg-gray">业务场景</div>
           <div class="infos">
-            <p>智能合约版</p>
+            <p v-show="isSteps === 1">智能合约版</p>
+            <p v-show="isSteps === 2">智能合约版</p>
+            <p v-show="isSteps === 3">智能合约版</p>
           </div>
           <div class="title bg-gray">基本信息</div>
           <div class="infos">
-            <p class="logo cb"><span class="fl">Logo</span><font class="fl"><img src="./../../assets/img/logo.svg"/></font></p>
-            <p class="cb"><span class="fl">链名称</span><font class="fl">BTC网络</font></p>
-            <p class="cb"><span class="fl">通证名称</span><font class="fl">BTC</font></p>
-            <p class="cb"><span class="fl">进度</span><font class="fl">8</font></p>
-            <p class="cb"><span class="fl">总发行量</span><font class="fl">21000000</font></p>
+            <p class="logo cb">
+              <span class="fl">Logo</span>
+              <font class="fl"><img :src="infoForm.logoUrl"/></font>
+            </p>
+            <p class="cb"><span class="fl">链名称</span><font class="fl">{{infoForm.name}}</font></p>
+            <p class="cb"><span class="fl">通证名称</span><font class="fl">{{infoForm.symbol}}</font></p>
+            <p class="cb"><span class="fl">进度</span><font class="fl">{{infoForm.precision}}</font></p>
+            <p class="cb"><span class="fl">总发行量</span><font class="fl">{{infoForm.total}}</font></p>
           </div>
 
           <div class="title bg-gray">创世块</div>
@@ -222,41 +226,36 @@
                 <span class="fl">地址</span>
                 <font class="fl">分配数量</font>
               </li>
-              <li>
-                <span class="fl">tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2</span>
-                <font class="fl">2,222,200,000</font>
-              </li>
-              <li>
-                <span class="fl">tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2</span>
-                <font class="fl">2,222,200,000</font>
-              </li>
-              <li>
-                <span class="fl">tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2</span>
-                <font class="fl">2,222,200,000</font>
+              <li v-for="item of nodeForm.addressList" :key="item.key">
+                <span class="fl">{{item.address}}</span>
+                <font class="fl">{{item.number}}</font>
               </li>
             </ul>
           </div>
 
           <div class="title bg-gray cb">跨链</div>
           <div class="infos">
-            <p class="cb"><span class="fl">是否跨链</span><font class="fl">是</font></p>
-            <p class="cb"><span class="fl">抵押金</span><font class="fl">200000 <font class="fCN">NULS</font></font></p>
+            <p class="cb"><span class="fl">是否跨链</span><font class="fl">{{isPartake=== '0' ? '是':'否' }}</font></p>
+            <p class="cb"><span class="fl">抵押金</span><font class="fl">{{isPartake=== '0' ? '20000':'0' }} <font
+                    class="fCN">NULS</font></font></p>
           </div>
           <div class="title bg-gray">节点</div>
           <div class="infos">
-            <p class="cb"><span class="fl">模式</span><font class="fl">云节点运行</font></p>
-            <p class="cb"><span class="fl">运行时间</span><font class="fl">6个月</font></p>
-            <p class="cb"><span class="fl">共识节点</span><font class="fl">4个</font></p>
-            <p class="cb"><span class="fl">费用</span><font class="fl">2976 <font class="fCN">NULS</font></font></p>
+            <p class="cb"><span class="fl">模式</span><font class="fl"> {{isApply=== '0' ? '云节点运行':'自行部署' }}</font></p>
+            <div v-show="isApply=== '0'">
+              <p class="cb"><span class="fl">运行时间</span><font class="fl">{{applyForm.runTime}}个月</font></p>
+              <p class="cb"><span class="fl">共识节点</span><font class="fl">{{applyForm.node}}个</font></p>
+              <p class="cb"><span class="fl">费用</span><font class="fl">{{applyForm.netFee}} <font
+                      class="fCN">NULS</font></font></p>
+            </div>
+
           </div>
         </div>
-
-
       </div>
 
     </div>
 
-    <div class="w1200 bg-white bottoms cb">
+    <div class="w1200 bg-white bottoms cb" v-show="stepsActive ===5">
       <div class="b-left fl">
         <div class="fl total">
           <p>总费用: <span class="yellow">56464</span><font class="fCN">&nbsp;NULS</font></p>
@@ -264,13 +263,18 @@
         <el-popover placement="top" width="320" trigger="click" class="popover">
           <div class="detailed">
             <h6 class="bg-gray">账单明细</h6>
-            <p class="cb"><u class="fl gray">创建基本信息</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font></p>
-            <p class="cb"><u class="fl gray">跨链抵押</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font></p>
-            <p class="cb"><u class="fl gray">运行3个种子节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font></p>
-            <p class="cb"><u class="fl gray">运行5个共识节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font></p>
-            <p class="cb all"><u class="fl gray">总计</u><span class="yellow fl">0.01</span><font class="fCN">&nbsp;NULS</font></p>
+            <p class="cb"><u class="fl gray">创建基本信息</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
+            </p>
+            <p class="cb"><u class="fl gray">跨链抵押</u><span class="fl">{{isPartake=== '0' ? '20000':'0' }} </span><font
+                    class="fCN">&nbsp;NULS</font></p>
+            <p class="cb"><u class="fl gray">运行3个种子节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
+            </p>
+            <p class="cb"><u class="fl gray">运行5个共识节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
+            </p>
+            <p class="cb all"><u class="fl gray">总计</u><span class="yellow fl">0.01</span><font
+                    class="fCN">&nbsp;NULS</font></p>
           </div>
-          <el-link :underline="false" type="primary"  slot="reference">明细</el-link>
+          <el-link :underline="false" type="primary" slot="reference">明细</el-link>
         </el-popover>
 
       </div>
@@ -284,100 +288,160 @@
 </template>
 
 <script>
-  import {API_CHAIN_ID} from '@/config'
-  import {getAddressInfoByAddress} from '@/api/requestData'
+  import nuls from 'nuls-sdk-js'
+  import {MAIN_INFO} from '@/config'
+  import UploadBar from './../../components/UploadBar';
 
   export default {
     data() {
+      let validateName = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请输入链名称'));
+        } else {
+          /*if (this.infoForm.logoUrl !== '') {
+            this.$refs.ruleForm.validateField('logoUrl');
+          }*/
+          callback();
+        }
+      };
+      let validateLogo = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请上传链logo'));
+        } else {
+          callback();
+        }
+      };
+      let validateSymbol = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入通证简称'));
+        } else {
+          callback();
+        }
+      };
+      let validateTotal = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入发行总量'));
+        } else {
+          callback();
+        }
+      };
+      let validatePrecision = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入精度系数'));
+        } else {
+          callback();
+        }
+      };
+
       return {
+        accountInfo: JSON.parse(localStorage.getItem('accountInfo')),//地址信息
+
         stepsActive: 5,//步骤条
+        isSteps: 1,//业务场景选中模块
 
         infoForm: {
-          name: '',
-          logoUrl: '',
-          symbol: '',
-          total: '',
-          precision: '',
+          name: 'wave',
+          logoUrl: 'http://zlj-1.oss-cn-hangzhou.aliyuncs.com/1565085680556.png',
+          symbol: 'wave',
+          total: '88888',
+          precision: '5',
           senior: false,
           desc: ''
         },
         infoRules: {
           name: [
-            {required: true, message: '请输入活动名称', trigger: 'blur'},
+            {validator: validateName, trigger: 'blur'}
           ],
           logoUrl: [
-            {required: true, message: '请输入活动名称', trigger: 'blur'},
+            {validator: validateLogo, trigger: 'blur'},
           ],
           symbol: [
-            {required: true, message: '请输入活动名称', trigger: 'blur'},
+            {validator: validateSymbol, trigger: 'blur'},
           ],
           total: [
-            {required: true, message: '请输入活动名称', trigger: 'blur'},
+            {validator: validateTotal, trigger: 'blur'},
           ],
           precision: [
-            {required: true, message: '请输入活动名称', trigger: 'blur'},
+            {validator: validatePrecision, trigger: 'blur'},
           ],
-          senior: [
-            {required: true, message: '请选择活动资源', trigger: 'change'}
-          ]
         },
 
         nodeForm: {
           addressList: [
-            {address: 'tNULSeBaMvH8TmMZUPQKvc19qeLrD7oN643aBL', number: '', time: ''}
+            {
+              address: "tNULSeBaMvN1zdsRJY96pLtFkke5YJV9fzJNXR",
+              key: 1565085784984,
+              number: 55555,
+              pri: "4c4853ef46900f77db5b0af41e16ed408f26c9f4611356bce2b81aebfbe6e0ba",
+              time: 1567828800000
+            },
+            {
+              address: "tNULSeBaMgKuMz7VMGftERR6UDSDDwcsaJZesT",
+              key: 1565085795453,
+              number: 33333,
+              pri: "0b7c56e6e4a1400dcdc639f3be4f1cf7cf5fc7004dfe151bd3d6b30ebe1d0bd9",
+              time: 1566446400000
+            }
           ],
         },
         backupsDialog: false,
-        addressKeyData: [
-          {
-            nu: '1',
-            address: 'tNULSeBaMvH8TmMZUPQKvc19qeLrD7oN643aBL',
-            key: '77b6e2d46cd08aaff18098e7b556323a4b36aff80f49acc01d1f3d9670889df8'
-          }
-        ],
+        addressKeyData: [],
 
-        isPartake: '0', //设置跨链模式
+        isPartake: '0', //设置跨链模式 0:参与跨链 1:不参与跨链
 
-        isApply: '0', //节点申请方式
+        isApply: '0', //节点申请方式 0:云节点 1:自行部署
         applyForm: {
-          runTime: '0',
-          node: '0',
-          netFee: '',
+          runTime: '20',
+          node: '5',
+          netFee: 100,
           seedNode1: '',
           seedNode2: '',
           seedNode3: '',
         },
         applyRules: {},
-
-
       };
+    },
+    components: {
+      UploadBar
+    },
+    watch: {},
+    created() {
+      //this.addDomain();
+    },
+    mounted() {
+      localStorage.getItem('accountInfo');
     },
     methods: {
 
       /**
-       * 下一步方法
+       * 选择业务类型
+       * @param type
        **/
-      next() {
-        this.stepsActive = this.stepsActive + 1;
+      changeSteps(type) {
+        this.isSteps = type;
       },
 
       /**
-       * 上传图片信息
+       * 验证名称
        **/
-      handleAvatarSuccess(res, file) {
-        this.addModuleForm.imageUrl = URL.createObjectURL(file.raw);
+      async changeName() {
+        //console.log(this.infoForm.name);
+        await this.$post('/chain/check', {'chainId': '2', 'address': 'tNULSeBaMvH8TmMZUPQKvc19qeLrD7oN643aBL'})
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((error) => {
+            console.log(error);
+          });
       },
-      beforeAvatarUpload(file) {
-        const isJPG = file.type === 'image/jpeg';
-        const isLt2M = file.size / 1024 / 1024 < 2;
 
-        if (!isJPG) {
-          this.$message.error('上传头像图片只能是 JPG 格式!');
-        }
-        if (!isLt2M) {
-          this.$message.error('上传头像图片大小不能超过 2MB!');
-        }
-        return isJPG && isLt2M;
+      /**
+       * 获取logo连接地址
+       * @param data
+       **/
+      getMsgFormSon(data) {
+        this.infoForm.logoUrl = data;
+        console.log(data);
       },
 
       /**
@@ -386,40 +450,61 @@
       infoSubmitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            alert('submit!');
-          } else {
+            //console.log(this.infoForm);
             this.next();
+            this.addDomain();
+          } else {
             return false;
           }
         });
       },
 
       /**
-       * 创世块提交
+       * 备份私钥
        * @param formName
        * */
       nodeSubmitForm(formName) {
+        console.log(formName);
+        this.addressKeyData = this.nodeForm.addressList;
         this.backupsDialog = true;
-        /*this.$refs[formName].validate((valid) => {
-          if (valid) {
-            alert('submit!');
-          } else {
-            this.next();
-            return false;
-          }
-        });*/
       },
 
+      //移除创世块
       removeDomain(item) {
         let index = this.nodeForm.addressList.indexOf(item);
         if (index !== -1) {
           this.nodeForm.addressList.splice(index, 1)
         }
       },
+
+      //添加创世块
       addDomain() {
+        let newAddressInfo = nuls.newAddress(MAIN_INFO.chainId, '');
         this.nodeForm.addressList.push(
-          {address: 'tNULSeBaMvH8TmMZUPQKvc19qeLrD7oN643aBL', number: '', time: '', key: Date.now()}
+          {address: newAddressInfo.address, number: '', time: '', pri: newAddressInfo.pri, key: Date.now()}
         );
+      },
+
+      /**
+       * 创世块下一步
+       **/
+      nodeNext() {
+        console.log(this.nodeForm);
+        let newNodeList = this.nodeForm.addressList;
+        let nuData = newNodeList.filter((v) => {
+          return v.number === ''
+        });
+        let timeData = newNodeList.filter((v) => {
+          return v.time === '' || !v.time
+        });
+        if (nuData.length === 0 && timeData.length === 0) {
+          for (let item of this.nodeForm.addressList) {
+            item.time = new Date(item.time).getTime()
+          }
+          this.next()
+        } else {
+          this.$message({message: "有未填写参数 ", type: 'error', duration: 2000});
+        }
       },
 
       /**
@@ -427,15 +512,22 @@
        * @param formName
        * */
       applySubmitForm(formName) {
-        this.next();
+        console.log(this.applyForm);
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            console.log('submit!');
+            this.next();
           } else {
             this.next();
             return false;
           }
         });
+      },
+
+      /**
+       * 下一步方法
+       **/
+      next() {
+        this.stepsActive = this.stepsActive + 1;
       },
 
       /**
@@ -473,10 +565,13 @@
         }
       }
       .steps-scene {
-        border: 1px solid #608fff;
+        border: @BD1;
         margin: 0 30px 0;
         width: 290px;
         text-align: left;
+        cursor: pointer;
+        z-index: 3;
+        float: left;
         &:first-child {
           margin: 0 30px 0 0;
         }
@@ -484,22 +579,23 @@
           margin: 0 0 0 30px;
         }
         h6 {
-          background-color: #d6e2ff;
+          background-color: #dfe4ef;
           font-size: 16px;
           color: #5f6b88;
           line-height: 40px;
           padding: 0 0 0 20px;
-          border-bottom: 1px solid #aec6ff;
+          border-bottom: 1px solid #dfe4ef;
         }
         p {
           font-size: 14px;
           padding: 20px;
           color: #8794b1;
           line-height: 20px;
-          border-bottom: 1px solid #aec6ff;
+          border-bottom: 1px solid #dfe4ef;
         }
         ul {
           padding: 10px;
+          z-index: 2;
           li {
             float: left;
             background-color: #eff1f6;
@@ -513,6 +609,26 @@
             }
           }
         }
+        &:hover {
+          border: 1px solid #608fff;
+          h6 {
+            background-color: #d6e2ff;
+            border-bottom: 1px solid #aec6ff;
+          }
+          p {
+            border-bottom: 1px solid #aec6ff;
+          }
+        }
+      }
+      .is-active {
+        border: 1px solid #608fff;
+        h6 {
+          background-color: #d6e2ff;
+          border-bottom: 1px solid #aec6ff;
+        }
+        p {
+          border-bottom: 1px solid #aec6ff;
+        }
       }
 
       .steps-info {
@@ -524,38 +640,16 @@
             height: 28px;
             line-height: 28px;
           }
-        }
-        .avatar-uploader {
-          .el-upload {
-            border: 1px dashed #d9d9d9;
-            border-radius: 6px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            &:hover {
-              border-color: #409EFF;
-            }
+          .el-switch {
+            margin: -15px 0 0 0;
           }
-        }
-        .avatar-uploader-icon {
-          font-size: 28px;
-          color: #8c939d;
-          width: 80px;
-          height: 80px;
-          line-height: 80px;
-          text-align: center;
-        }
-        .avatar {
-          width: 80px;
-          height: 80px;
-          display: block;
         }
       }
 
       .steps-node {
         width: 680px;
-        height: 120px;
-        margin: 30px auto 0;
+        min-height: 120px;
+        margin: 30px auto 100px;
         .steps-nodeForm {
           .address {
             margin: 0 0 20px 0;
@@ -683,11 +777,11 @@
         }
       }
 
-      .steps-confirm{
-        .w700{
+      .steps-confirm {
+        .w700 {
           width: 700px;
           margin: 50px auto 10px;
-          .title{
+          .title {
             height: 40px;
             line-height: 40px;
             font-weight: bold;
@@ -695,110 +789,107 @@
             padding: 0 0 0 40px;
             font-size: 16px;
           }
-          .infos{
+          .infos {
             padding: 10px 0 10px 40px;
-            p{
+            p {
               font-size: 14px;
               height: 22px;
               line-height: 22px;
               width: 100%;
               margin: 5px 0;
-              span{
+              span {
                 display: block;
                 width: 160px;
               }
             }
-            .logo{
+            .logo {
               height: 60px;
-              img{
+              img {
                 width: 60px;
                 height: 60px;
                 border: @BD1;
                 padding: 5px;
               }
             }
-            ul{
+            ul {
               margin: 5px 0;
-              li{
+              li {
                 border-bottom: @BD1;
                 line-height: 30px;
                 height: 30px;
                 font-size: 14px;
                 padding: 0 0 0 40px;
-                span{
+                span {
                   display: block;
-                  width:360px;
+                  width: 360px;
 
                 }
-                font{
+                font {
                   margin: 0 0 0 20px;
                 }
-                &:last-child{
+                &:last-child {
                   border-bottom: 0;
                 }
               }
-              .titles{
+              .titles {
                 border-bottom: 2px solid #dfe4ef;
               }
             }
           }
-          .node-infos{
+          .node-infos {
             padding: 10px 0 10px 0;
           }
         }
       }
     }
-    .bottoms{
+    .bottoms {
       height: 100px;
       margin: 30px auto 100px;
       line-height: 100px;
-      .b-left,.b-right{
+      .b-left, .b-right {
         text-align: center;
         width: 48%;
       }
-      .b-left{
-        .total{
+      .b-left {
+        .total {
           margin: 0 0 0 280px;
         }
       }
     }
-
   }
 
-  .el-popper{
+  .el-popper {
     padding: 0;
     border: @BD1;
     border-radius: 2px;
-    .detailed{
-      h6{
+    .detailed {
+      h6 {
         font-size: 24px;
         color: #17202e;
         padding: 10px 0 10px 20px;
         margin: 0 0 20px 0;
       }
-      p{
+      p {
         line-height: 28px;
         font-size: 16px;
         padding: 0 0 0 20px;
-        u{
+        u {
           display: block;
           width: 150px;
         }
-        span{
+        span {
           color: #17202e;
         }
       }
-      .all{
+      .all {
         border-top: @BD1;
         padding: 5px 0 15px 20px;
-        span{
-          color:#FD9D2D;
+        span {
+          color: #FD9D2D;
           font-size: 20px;
         }
       }
 
     }
   }
-
-
 </style>

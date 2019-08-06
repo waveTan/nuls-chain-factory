@@ -28,7 +28,7 @@
 
 <script>
   import nuls from 'nuls-sdk-js'
-  import {API_CHAIN_ID} from '@/config'
+  import {MAIN_INFO} from '@/config'
   import {getAddressInfoByAddress} from '@/api/requestData'
 
   export default {
@@ -77,7 +77,7 @@
       async submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            this.newAddressInfo = nuls.newAddress(API_CHAIN_ID, this.newAddressForm.pass);
+            this.newAddressInfo = nuls.newAddress(MAIN_INFO.chainId, this.newAddressForm.pass);
             this.getAddressInfoByAddress(this.newAddressInfo.address);
           } else {
             return false;

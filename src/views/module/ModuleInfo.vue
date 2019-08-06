@@ -48,9 +48,6 @@
 </template>
 
 <script>
-  import nuls from 'nuls-sdk-js'
-  import {API_CHAIN_ID} from '@/config'
-  import {getAddressInfoByAddress} from '@/api/requestData'
 
   export default {
     data() {
@@ -87,45 +84,45 @@
       font-size: 18px;
       font-weight: bold;
     }
-    .info{
+    .info {
       min-height: 500px;
       border: @BD1;
       padding: 0 50px;
-      .base{
-        p{
+      .base {
+        p {
           line-height: 26px;
-          .left{
+          .left {
             display: block;
             float: left;
             width: 8rem;
           }
         }
       }
-      .module_tab{
-        .el-tabs__header{
-          .el-tabs__nav-wrap{
-            &::after{
+      .module_tab {
+        .el-tabs__header {
+          .el-tabs__nav-wrap {
+            &::after {
               height: 1px;
             }
           }
-          .el-tabs__nav{
+          .el-tabs__nav {
             margin: 15px 0 10px 0;
-            .el-tabs__active-bar{
-             background-color: transparent;
+            .el-tabs__active-bar {
+              background-color: transparent;
             }
-            .el-tabs__item{
+            .el-tabs__item {
               font-size: 18px;
-              &:hover{
+              &:hover {
                 color: @Ncolour;
               }
             }
-            .is-active{
+            .is-active {
               color: @Ncolour;
             }
           }
         }
       }
-      .md{
+      .md {
         margin: 20px 0 0 0;
       }
     }

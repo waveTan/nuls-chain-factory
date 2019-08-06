@@ -1,6 +1,6 @@
 import {BigNumber} from 'bignumber.js'
 import copy from 'copy-to-clipboard'
-import {API_CHAIN_ID} from './../config'
+import {MAIN_INFO} from './../config'
 
 /**
  * 10的N 次方
@@ -80,7 +80,7 @@ export function timesDecimals(nu, decimals = 8) {
  * @returns {number}
  */
 export function chainID() {
-  return API_CHAIN_ID
+  return MAIN_INFO.chainId
 }
 
 /**

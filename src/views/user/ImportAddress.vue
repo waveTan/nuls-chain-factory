@@ -25,7 +25,7 @@
 
 <script>
   import nuls from 'nuls-sdk-js'
-  import {API_CHAIN_ID} from '@/config'
+  import {MAIN_INFO} from '@/config'
   import {getAddressInfoByAddress} from '@/api/requestData'
   import BackBar from '@/components/BackBar'
 
@@ -86,7 +86,8 @@
       submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            this.importAddressInfo = nuls.importByKey(API_CHAIN_ID, this.importForm.keys, this.importForm.pass);
+            this.importAddressInfo = nuls.importByKey(MAIN_INFO.chainId, this.importForm.keys, this.importForm.pass);
+            //console.log(this.importAddressInfo);
             this.getAddressInfoByAddress(this.importAddressInfo.address);
           } else {
             return false;

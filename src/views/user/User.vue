@@ -2,8 +2,8 @@
   <div class="user bg-gray">
     <div class="bg-white user-info">
       <div class="w1200">
-        <span>账户: {{accountAddress.address}}</span>&nbsp;
-        <font>余额: 4564.4655456 <font class="fCN">NULS</font></font>
+        <span>账户: {{accountAddress.address}}</span>&nbsp;&nbsp;
+        <font>余额: {{accountAddress.balance}} <font class="fCN">NULS</font></font>
       </div>
 
     </div>
@@ -51,9 +51,9 @@
 </template>
 
 <script>
-  import nuls from 'nuls-sdk-js'
-  import {API_CHAIN_ID} from '@/config'
-  import {getAddressInfoByAddress} from '@/api/requestData'
+  import axios from 'axios'
+  import {API_MODEL_URL,MAIN_INFO} from '@/config'
+  import {timesDecimals} from '@/api/util'
 
   export default {
     data() {
@@ -65,7 +65,7 @@
           {chain: 'bitcoin', id: '888', nodeInfo: '7【18小时17分钟】'},
           {chain: 'bitcoin', id: '999', nodeInfo: '7【18小时17分钟】'}
         ],
-        addDialog: true,//追加维护网络弹窗
+        addDialog: false,//追加维护网络弹窗
         formLabelWidth: '150px',
         addForm: {
           time: '10K',
@@ -74,7 +74,37 @@
         },
       };
     },
+    created() {
+      this.getBalanceByAddress(this.accountAddress.address);
+    },
+    mounted() {},
     methods: {
+
+      /**
+       * 获取转出地址余额信息
+       *  @param assetChainId
+       *  @param assetId
+       *  @param address
+       **/
+      async getBalanceByAddress(address) {
+        const params = {"jsonrpc": "2.0", "method": "getAccountBalance", "params": [2,MAIN_INFO.chainId, MAIN_INFO.assetsId, address], "id": Math.floor(Math.random()*1000)};
+        axios.post(API_MODEL_URL, params)
+          .then((response) => {
+            //console.log(response.data);
+            if (response.data.hasOwnProperty("result")) {
+              this.accountAddress.balance = timesDecimals(response.data.result.balance);
+              localStorage.setItem('accountInfo', JSON.stringify(this.accountAddress));
+            } else {
+              this.accountAddress.balance = 0;
+              localStorage.setItem('accountInfo', JSON.stringify(this.accountAddress));
+            }
+          })
+          .catch((error) => {
+            this.accountAddress.balance = 0;
+            localStorage.setItem('accountInfo', JSON.stringify(this.accountAddress));
+            console.log("getAccountBalance:" + error)
+          })
+      },
 
       handleClick(row) {
         console.log(row);

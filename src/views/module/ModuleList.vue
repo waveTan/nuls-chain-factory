@@ -77,10 +77,6 @@
 </template>
 
 <script>
-  import nuls from 'nuls-sdk-js'
-  import {API_CHAIN_ID} from '@/config'
-  import {getAddressInfoByAddress} from '@/api/requestData'
-
   export default {
     data() {
       return {};
