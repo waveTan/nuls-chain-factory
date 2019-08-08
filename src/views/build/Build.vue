@@ -8,9 +8,10 @@
       <el-steps :active="stepsActive" finish-status="success">
         <el-step title="选择业务场景" icon="el-icon-edit"></el-step>
         <el-step title="填写基本信息" icon="el-icon-edit-outline"></el-step>
+        <el-step title="配置经济模型" icon="el-icon-tickets"></el-step>
         <el-step title="配置创世块" icon="el-icon-folder"></el-step>
         <el-step title="设置跨链" icon="el-icon-folder-add"></el-step>
-        <el-step title="申请节点" icon="el-icon-tickets"></el-step>
+        <!-- <el-step title="申请节点" icon="el-icon-tickets"></el-step>-->
         <el-step title="确认订单" icon="el-icon-monitor"></el-step>
       </el-steps>
 
@@ -18,7 +19,7 @@
       <div class="steps" v-show="stepsActive ===0">
         <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''" @click="changeSteps(1)">
           <h6>分布式账本版</h6>
-          <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改。</p>
+          <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改</p>
           <ul>
             <li>金融结算</li>
             <li>供应链</li>
@@ -28,29 +29,34 @@
           </ul>
         </div>
         <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''" @click="changeSteps(2)">
-          <h6>分布式账本版</h6>
-          <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改。</p>
+          <h6>智能合约版</h6>
+          <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
           <ul>
-            <li>金融结算</li>
-            <li>供应链</li>
-            <li>分布式证书</li>
-            <li>防伪溯源</li>
-            <li>发票</li>
+            <li>游戏</li>
+            <li>积分系统</li>
+            <li>公司治理</li>
+            <li>社交应用</li>
           </ul>
         </div>
-        <div class="steps-scene" style="margin: 0 0 0 30px" :class="isSteps===3 ? 'is-active' : ''"
-             @click="changeSteps(3)">
-          <h6>分布式账本版</h6>
-          <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改。</p>
+        <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" @click="changeSteps(3)">
+          <h6>POCM版</h6>
+          <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
           <ul>
-            <li>金融结算</li>
-            <li>供应链</li>
-            <li>分布式证书</li>
-            <li>防伪溯源</li>
-            <li>发票</li>
+            <li>游戏</li>
+            <li>积分系统</li>
+            <li>公司治理</li>
+            <li>社交应用</li>
           </ul>
         </div>
-        <el-button type="success" class="btn-next" @click="next">下一步</el-button>
+        <div class="steps-scene" :class="isSteps===4 ? 'is-active' : ''" @click="changeSteps(4)" v-show="false">
+          <h6>自定义版本</h6>
+          <p>该版本可将业务逻辑以模块的形式独立并置于区块链底层，该版本正在内测中，请耐心等待...</p>
+          <ul>
+            <li>业务场景</li>
+            <li>根据实际业务进行定制</li>
+          </ul>
+        </div>
+        <el-button type="success" class="btn-next" @click="stepsNext">下一步</el-button>
       </div>
 
       <!--填写基本信息-->
@@ -77,7 +83,7 @@
             <el-switch v-model="infoForm.senior"></el-switch>
           </el-form-item>
           <el-form-item label="" prop="desc" v-show="infoForm.senior">
-            <el-input type="textarea" v-model="infoForm.desc"></el-input>
+            <el-input type="textarea" :rows="5" v-model="infoForm.desc"></el-input>
           </el-form-item>
           <el-form-item class="btn-next tc">
             <el-button type="success" @click="infoSubmitForm('infoForm')">下一步</el-button>
@@ -85,8 +91,38 @@
         </el-form>
       </el-row>
 
+      <!--通胀模型-->
+      <div class="steps-inflation" v-show="stepsActive ===2">
+        <div class="from-div cb w630">
+          <el-form :model="inflationForm" :rules="inflationRules" ref="inflationForm" class="inflation-form">
+            <el-form-item label="通胀金额" prop="netFee">
+              <el-input v-model="inflationForm.amount" placeholder="初始通胀金额">
+              </el-input>
+            </el-form-item>
+            <el-form-item label="开始时间" prop="seedNode1">
+              <div class="cd time">
+                <el-date-picker v-model="inflationForm.startTime" type="datetime" placeholder="通胀开始计算时间">
+                </el-date-picker>
+              </div>
+            </el-form-item>
+            <el-form-item label="通缩比例" prop="seedNode2">
+              <el-input v-model="inflationForm.proportion" placeholder="通缩比例">
+              </el-input>
+            </el-form-item>
+            <el-form-item label="间隔时间/天" prop="seedNode3">
+              <el-input v-model="inflationForm.intervalTime" placeholder="通缩间隔时间">
+              </el-input>
+            </el-form-item>
+            <el-form-item class="btn-next tc">
+              <el-button type="success" @click="inflationSubmitForm('inflationForm')">下一步</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
+
+      </div>
+
       <!--配置创世块-->
-      <el-row class="steps-node" v-show="stepsActive ===2">
+      <el-row class="steps-node" v-show="stepsActive ===3">
         <el-form :model="nodeForm" ref="nodeForm" class="steps-nodeForm">
           <el-col class="address bg-gray" v-for="(domain, index) in nodeForm.addressList" :key="index">
             <div class="node-address">
@@ -132,7 +168,7 @@
       </el-row>
 
       <!--设置跨链-->
-      <el-row class="steps-set" v-show="stepsActive ===3">
+      <el-row class="steps-set" v-show="stepsActive ===4">
         <el-col class="tc radio">
           <el-radio v-model="isPartake" label="0">参与跨链</el-radio>
           <el-radio v-model="isPartake" label="1">不参与跨链</el-radio>
@@ -153,7 +189,7 @@
       </el-row>
 
       <!--申请节点-->
-      <div class="steps-apply" v-show="stepsActive ===4">
+      <div class="steps-apply" v-show="stepsActive ===4" v-if="false">
         <el-col class="tc radio">
           <el-radio v-model="isApply" label="0">云节点运行 <i class="el-icon-warning"></i></el-radio>
           <el-radio v-model="isApply" label="1">自行部署 <i class="el-icon-warning"></i></el-radio>
@@ -289,7 +325,7 @@
 
 <script>
   import nuls from 'nuls-sdk-js'
-  import {MAIN_INFO} from '@/config'
+  import {MAIN_INFO,API_COFIG} from '@/config'
   import UploadBar from './../../components/UploadBar';
 
   export default {
@@ -336,9 +372,10 @@
       return {
         accountInfo: JSON.parse(localStorage.getItem('accountInfo')),//地址信息
 
-        stepsActive: 5,//步骤条
+        stepsActive: 0,//步骤条
         isSteps: 1,//业务场景选中模块
 
+        //基本信息表单
         infoForm: {
           name: 'wave',
           logoUrl: 'http://zlj-1.oss-cn-hangzhou.aliyuncs.com/1565085680556.png',
@@ -346,7 +383,7 @@
           total: '88888',
           precision: '5',
           senior: false,
-          desc: ''
+          desc:'',
         },
         infoRules: {
           name: [
@@ -366,6 +403,16 @@
           ],
         },
 
+        //经济模型表单
+        inflationForm: {
+          amount: 5000000000,
+          startTime: '2019-08-23 00:00:00',
+          proportion: '10',
+          intervalTime: '365',
+        },
+        inflationRules: {},
+
+        //创世块表单
         nodeForm: {
           addressList: [
             {
@@ -422,6 +469,15 @@
       },
 
       /**
+       * 业务类型下一步
+       **/
+      stepsNext(){
+        this.next();
+        console.log(API_COFIG);
+        this.infoForm.desc = JSON.stringify(API_COFIG);
+      },
+
+      /**
        * 验证名称
        **/
       async changeName() {
@@ -450,7 +506,21 @@
       infoSubmitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-            //console.log(this.infoForm);
+            console.log(this.infoForm);
+            this.next();
+          } else {
+            return false;
+          }
+        });
+      },
+
+      /**
+       * 经济模型提交
+       **/
+      inflationSubmitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+            console.log(this.inflationForm);
             this.next();
             this.addDomain();
           } else {
@@ -575,7 +645,7 @@
         &:first-child {
           margin: 0 30px 0 0;
         }
-        &:last-child {
+        &:nth-child(3n){
           margin: 0 0 0 30px;
         }
         h6 {
@@ -643,6 +713,16 @@
           .el-switch {
             margin: -15px 0 0 0;
           }
+        }
+      }
+
+      .steps-inflation {
+        margin: 30px auto 100px;
+        .time {
+          .el-date-editor {
+            width: 100%;
+          }
+
         }
       }
 
