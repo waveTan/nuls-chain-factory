@@ -5,7 +5,7 @@
     </div>
 
     <div class="w1200 mt_30 bg-white info">
-      <el-steps :active="stepsActive" finish-status="success">
+      <el-steps :active="stepsActive" finish-status="success" class="step">
         <el-step title="选择业务场景" icon="el-icon-edit"></el-step>
         <el-step title="填写基本信息" icon="el-icon-edit-outline"></el-step>
         <el-step title="配置经济模型" icon="el-icon-tickets"></el-step>
@@ -626,6 +626,9 @@
     .info {
       min-height: 500px;
       border: @BD1;
+      .step{
+        margin: 30px 10px;
+      }
       .steps {
         margin: 30px 100px 100px;
         text-align: center;

@@ -1,6 +1,8 @@
 <template>
   <div class="home">
-    <div class="carousel"></div>
+    <div class="carousel">
+      <img src="./../assets/img/bank.png"/>
+    </div>
     <div class="w1200 bg-white">
       <div class="left fl">
         <p>
@@ -12,20 +14,22 @@
         </el-row>
       </div>
       <div class="right fr">
-
+        <img style="margin: 50px 0 0 0" src="./../assets/img/1.png"/>
       </div>
     </div>
-    <div class="w1200 bg-gray">
-      <div class="left fl">
-
-      </div>
-      <div class="right fr">
-        <p>
-          微服务架构，支持根据实际业务定制化开发和现有模块进行结合。
-        </p>
-        <el-row>
-          <el-button type="success">前往搭建区块链</el-button>
-        </el-row>
+    <div class="bg-gray">
+      <div class="w1200">
+        <div class="left fl">
+          <img  style="margin: 30px 0 0 0" src="./../assets/img/2.png"/>
+        </div>
+        <div class="right fr">
+          <p>
+            微服务架构，支持根据实际业务定制化开发和现有模块进行结合。
+          </p>
+          <el-row>
+            <el-button type="success">前往搭建区块链</el-button>
+          </el-row>
+        </div>
       </div>
     </div>
   </div>
