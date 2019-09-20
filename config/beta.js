@@ -1,23 +1,25 @@
 /**
- * @disc: 正式网环境配置
+ * @disc: 测试网环境配置
  * @date: 2019-09-18 9:33
  * @author: Wave
  */
 "use strict";
+
 //开发模式
 export const IS_DEV = process.env.NODE_ENV !== 'production';
 //运行环境（true:正式环境，false:测试环境）
-export const RUN_DEV = true;
+export const RUN_DEV = false;
 //链信息
-export const MAIN_INFO = {chainId:1,assetsId:1};
+export const MAIN_INFO = {chainId:2,assetsId:1};
 //链前缀
-export const API_PREFIX = 'NULS';
+export const API_PREFIX = 'tNULS';
 //正式、测试网络的api
-export let API_URL = IS_DEV ? 'https://public1.nuls.io' : 'https://public1.nuls.io';
+export let API_URL = IS_DEV ? 'https://beta.wallet.nuls.io/api':'https://beta.wallet.nuls.io/api';
 //请求最迟时间
 export const API_TIME = '8000';
 //浏览器连接地址
-export const EXPLORER_URL = IS_DEV ? 'https://nulscan.io/' : 'https://nulscan.io/';
+export const EXPLORER_URL =IS_DEV ? 'http://beta.nulscan.io/':'https://beta.nulscan.io/';
+
 //高级配置的默认值
 export const API_COFIG = {
   "rollbackCount": 1000, //每次回滚最大数，取值1-1000

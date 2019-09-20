@@ -1,7 +1,7 @@
 <template>
   <div class="build bg-gray">
     <div class="bg-white top">
-      <h3 class="title">搭建区块链</h3>
+      <h3 class="title tc">搭建区块链</h3>
     </div>
 
     <div class="w1200 mt_30 bg-white info">

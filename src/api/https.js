@@ -1,9 +1,9 @@
 import axios from 'axios'
-import * as config from './../config.js'
+import {MAIN_INFO, API_TIME, API_URL} from '@/config'
 
-axios.defaults.timeout = config.API_TIME;
-axios.defaults.baseURL = config.API_URL;
-axios.defaults.headers.post['Content-Type'] = 'application/json';
+axios.defaults.timeout = API_TIME;
+axios.defaults.baseURL = API_URL;
+axios.defaults.headers.post['Content-Type'] = 'application/json;charset=utf-8';
 
 /**
  * 封装post请求
@@ -13,14 +13,13 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
  * @param data
  * @returns {Promise}
  */
-export function post(url, data) {
-  return new Promise((resolve, reject) => {
-    axios.post(url, data)
-      .then(response => {
-        //console.log(response.data);
-        resolve(response.data)
-      }, err => {
-        reject(err)
-      })
-  })
+export async function post(url, methodName, data = []) {
+  data.unshift(MAIN_INFO.chainId);
+  const parameter = {jsonrpc: "2.0", method: methodName, params: data, id: Math.floor(Math.random() * 1000)};
+  try {
+    let res = await axios.post(url, parameter);
+    return res.data;
+  } catch (err) {
+    return err
+  }
 }

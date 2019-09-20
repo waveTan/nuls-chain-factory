@@ -59,12 +59,6 @@
         }
       }
     }
-
-    .input-200 {
-      .el-input__inner {
-        width: 200px;
-      }
-    }
   }
   .el-dialog__footer {
     text-align: center;
@@ -75,86 +69,54 @@
 
 }
 
-.el-table {
-  tr {
-    th {
-      padding: 8px 0;
-      background-color: @Bcolour2;
-    }
-  }
-  td {
-    padding: 1px 0 !important;
-  }
-
-}
-
 .btn-next {
   .el-button {
-    width: 300px;
+    width: 320px;
   }
 }
 
-.el-form {
-  .el-form-item {
-    margin: 0 0 15px 0;
-    .el-form-item__label {
-      line-height: 24px;
-    }
-    .el-form-item__content {
-      .el-form-item__error {
-        padding-top: 0;
-      }
-      .balance {
-        margin: 10px 0 0 0;
-      }
-    }
-  }
-  .form-next {
-    margin: 50px 0 0 0;
-    .el-form-item__content {
-      text-align: center;
-      .el-button {
-        width: 400px;
-      }
-    }
+.el-message {
+  .el-message__content {
+    line-height: 20px;
   }
 }
 
-.el-steps {
-  margin: 50px 100px 0;
-  .el-step {
-    .el-step__head {
-      .el-step__line {
-        border-bottom: 2px dashed @Ncolour;
-        height: 0;
-      }
-      .el-step__icon {
-        border-radius: 50px;
-        border: @BD1;
-        width: 50px;
-        height: 50px;
-        margin-top: -12px;
-      }
-      .is-status {
-        color: @Ncolour;
-        font-size: 22px;
-      }
+.el-button--default {
+  &:hover {
+    background-color: transparent !important;
+  }
+}
+
+.el-button--success {
+  background: linear-gradient(to right, #4ef16a, #0ede94) !important;
+  border-color: transparent !important;
+  &:hover {
+    background: linear-gradient(to right, #0ede94, #4ef16a) !important;
+  }
+}
+
+.el-link {
+  color: #608FFF !important;
+}
+
+.is-disabled {
+  color: #C0C4CC !important;
+}
+
+.el-message-box {
+  .el-message-box__btns {
+    text-align: center;
+    .btn {
+      margin: 30px auto !important;
+      border-color: transparent;
     }
   }
 }
 
-.el-radio {
-  .el-radio__input {
-
-  }
-  .is-checked {
-    color: @Ncolour !important;
-    .el-radio__inner {
-      border-color: @Ncolour !important;
-      background: @Ncolour !important;
-    }
-    .el-radio__label {
-      color: @Ncolour !important;
-    }
+.el-button--primary{
+  background: linear-gradient(to right, #4ef16a, #0ede94) !important;
+  border-color: #0ede94 !important;
+  &:hover{
+    background: linear-gradient(to right, #0ede94, #4ef16a) !important;
   }
 }
