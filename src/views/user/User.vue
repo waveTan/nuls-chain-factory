@@ -39,7 +39,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="网络维护费" :label-width="formLabelWidth">
-          <el-input v-model="addForm.cost" placeholder="全部节点维护费"  class="input-200"></el-input>
+          <el-input v-model="addForm.cost" placeholder="全部节点维护费" class="input-200"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -52,7 +52,7 @@
 
 <script>
   import axios from 'axios'
-  import {API_MODEL_URL,MAIN_INFO} from '@/config'
+  import {API_URL, MAIN_INFO} from '@/config'
   import {timesDecimals} from '@/api/util'
 
   export default {
@@ -77,7 +77,8 @@
     created() {
       this.getBalanceByAddress(this.accountAddress.address);
     },
-    mounted() {},
+    mounted() {
+    },
     methods: {
 
       /**
@@ -87,8 +88,13 @@
        *  @param address
        **/
       async getBalanceByAddress(address) {
-        const params = {"jsonrpc": "2.0", "method": "getAccountBalance", "params": [2,MAIN_INFO.chainId, MAIN_INFO.assetsId, address], "id": Math.floor(Math.random()*1000)};
-        axios.post(API_MODEL_URL, params)
+        const params = {
+          "jsonrpc": "2.0",
+          "method": "getAccountBalance",
+          "params": [2, MAIN_INFO.chainId, MAIN_INFO.assetsId, address],
+          "id": Math.floor(Math.random() * 1000)
+        };
+        axios.post(API_URL, params)
           .then((response) => {
             //console.log(response.data);
             if (response.data.hasOwnProperty("result")) {

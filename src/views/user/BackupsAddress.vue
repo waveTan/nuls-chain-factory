@@ -104,6 +104,9 @@
 
   .backups-address {
     .bg-white {
+      .title{
+        height: 100px;
+      }
     }
     .tab {
       .address {

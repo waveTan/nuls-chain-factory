@@ -1,63 +1,136 @@
 <template>
-  <div class="new-address bg-gray">
-    <div class="bg-white">
-      <h3 class="title">欢迎来到NULS,我们一起让区块链世界变得更简单</h3>
+  <div class="import-address bg-gray">
+    <div class="bg-white"></div>
+    <div style="">
+      <el-tabs v-model="activeName" @tab-click="handleClick" class="new_import w1200">
+        <el-tab-pane :label="$t('newAddress.newAddress0')" name="keystoreImport">
+          <div class="tc upload_keystore">
+            <el-upload drag class="upload" action="localhost" accept='.keystore' v-if="!isfileReader"
+                       :before-upload="handleUpload"
+                       :multiple="false"
+                       :limit="1">
+              <i class="el-icon-upload"></i>
+              <div class="el-upload__text">{{$t('newAddress.newAddress3')}}<em>{{$t('newAddress.newAddress4')}}</em>
+              </div>
+            </el-upload>
+            <div v-else>{{$t('newAddress.newAddress5')}}</div>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('newAddress.newAddress1')" name="keyImport">
+          <div class="tab bg-white w1200 mt_30">
+            <el-form :model="importForm" :rules="importRules" ref="importForm" status-icon class="import-form w630">
+              <el-form-item :label="$t('newAddress.newAddress6')" prop="keys">
+                <el-input type="textarea" v-model.trim="importForm.keys" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item :label="$t('newAddress.newAddress7')" prop="pass">
+                <el-input v-model="importForm.pass" type="password" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item :label="$t('newAddress.newAddress8')" prop="checkPass">
+                <el-input v-model="importForm.checkPass" type="password" autocomplete="off"></el-input>
+              </el-form-item>
+              <el-form-item class="form-bnt">
+                <el-button type="success" @click="keyImport('importForm')">{{$t('newAddress.newAddress9')}}</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('newAddress.newAddress2')" name="newAddress">
+          <el-form :model="newAddressForm" status-icon :rules="newAddressRules" ref="newAddressForm"
+                   class="new_address w630">
+            <el-form-item :label="$t('newAddress.newAddress7')" prop="pass">
+              <el-input type="password" v-model="newAddressForm.pass" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item :label="$t('newAddress.newAddress8')" prop="checkPass">
+              <el-input type="password" v-model="newAddressForm.checkPass" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item class="form-bnt">
+              <el-button type="success" @click="newAddressSubmitForm('newAddressForm')">
+                {{$t('newAddress.newAddress2')}}
+              </el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
     </div>
-    <div class="tab bg-white w1200 mt_30">
-      <div class="tips bg-gray w630">
-        <p class="font14"><i></i>请设置密码用以导入账户、转账、参与共识等重要行为验证</p>
-        <p class="font14"><i></i>请认真保存钱包密码，NULS钱包不存储密码，也无法帮您找回，请务必牢记</p>
-      </div>
-
-      <el-form :model="newAddressForm" status-icon :rules="newAddressRules" ref="newAddressForm" class="pass-form w630">
-        <el-form-item label="密码" prop="pass">
-          <el-input type="password" v-model="newAddressForm.pass" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="确认密码" prop="checkPass">
-          <el-input type="password" v-model="newAddressForm.checkPass" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item class="form-bnt">
-          <el-button type="success" @click="submitForm('newAddressForm')">创建账户</el-button>
-          <el-button type="text" @click="toUrl('importAddress')">导入账户</el-button>
-        </el-form-item>
-      </el-form>
-
-    </div>
+    <Password ref="password" @passwordSubmit="keystoreImportPassSubmit">
+    </Password>
   </div>
 </template>
 
 <script>
   import nuls from 'nuls-sdk-js'
-  import {MAIN_INFO} from '@/config'
+  import {MAIN_INFO, API_PREFIX} from '@/config'
   import {getAddressInfoByAddress} from '@/api/requestData'
+  import {passwordVerification, connect} from '@/api/util'
+  import Password from '@/components/PasswordBar'
 
   export default {
     data() {
+      let validateKeys = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error(this.$t('tips.tips0')));
+        } else {
+          callback();
+        }
+      };
       let validatePass = (rule, value, callback) => {
         if (value === '') {
-          callback(new Error('请输入密码'));
+          callback(new Error(this.$t('tips.password0')));
         } else {
-          if (this.newAddressForm.checkPass !== '') {
-            this.$refs.newAddressForm.validateField('checkPass');
+          if (this.importForm.checkPass !== '') {
+            this.$refs.importForm.validateField('checkPass');
           }
           callback();
         }
       };
       let validateCheckPass = (rule, value, callback) => {
         if (value === '') {
-          callback(new Error('请再次输入密码'));
+          callback(new Error(this.$t('tips.tips1')));
+        } else if (value !== this.importForm.pass) {
+          callback(new Error(this.$t('tips.tips2')));
+        } else {
+          callback();
+        }
+      };
+
+      let validateNewPass = (rule, value, callback) => {
+        let patrn = /^(?![\d]+$)(?![a-zA-Z]+$)(?![^\da-zA-Z]+$).{8,20}$/;
+        if (value === '') {
+          callback(new Error(this.$t('tips.password0')));
+        } else if (!patrn.exec(value)) {
+          callback(new Error(this.$t('tips.password1')));
+        } else {
+          if (this.newAddressForm.checkPass !== '') {
+            this.$refs.newAddressForm.validateField('validateNewCheckPass');
+          }
+          callback();
+        }
+      };
+      let validateNewCheckPass = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error(this.$t('tips.tips1')));
         } else if (value !== this.newAddressForm.pass) {
-          callback(new Error('两次输入密码不一致!'));
+          callback(new Error(this.$t('tips.tips2')));
         } else {
           callback();
         }
       };
       return {
-        newAddressForm: {
+        activeName: 'keystoreImport',//tab选中
+
+        isfileReader: typeof FileReader === "undefined",//浏览器是否支持FileReader
+        keystoreInfo: {},//keystore导入文本信息
+
+        importForm: {
+          keys: '',
           pass: '',
-          checkPass: '',
+          checkPass: ''
         },
-        newAddressRules: {
+        importRules: {
+          keys:
+            [
+              {validator: validateKeys, trigger: 'blur'}
+            ],
           pass: [
             {validator: validatePass, trigger: 'blur'}
           ],
@@ -65,81 +138,235 @@
             {validator: validateCheckPass, trigger: 'blur'}
           ]
         },
+        importAddressInfo: {},//私钥导入地址信息
+
+        newAddressForm: {
+          pass: '',
+          checkPass: '',
+        },
+        newAddressRules: {
+          pass: [
+            {validator: validateNewPass, trigger: 'blur'}
+          ],
+          checkPass: [
+            {validator: validateNewCheckPass, trigger: 'blur'}
+          ]
+        },
         newAddressInfo: {},//创建地址信息
       };
+    },
+    components: {
+      Password
+    },
+    created() {
     },
     methods: {
 
       /**
-       *  创建账户提交
-       * @param formName
-       **/
-      async submitForm(formName) {
-        this.$refs[formName].validate((valid) => {
+       * @disc: tab选择
+       * @params: tab
+       * @date: 2019-08-31 16:18
+       * @author: Wave
+       */
+      handleClick(tab) {
+        if (tab.name === 'keystoreImport') {
+          this.importAddressInfo = {};
+          this.newAddressInfo = {};
+          this.$refs['importForm'].resetFields();
+          this.$refs['newAddressForm'].resetFields();
+        } else if (tab.name === 'keyImport') {
+          this.keystoreInfo = {};
+          this.newAddressInfo = {};
+          this.$refs['newAddressForm'].resetFields();
+        } else {
+          this.keystoreInfo = {};
+          this.importAddressInfo = {};
+          this.$refs['importForm'].resetFields();
+        }
+      },
+
+      /**
+       * @disc: 获取kestore信息
+       * @params: file
+       * @date: 2019-08-31 16:01
+       * @author: Wave
+       */
+      handleUpload(file) {
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          //console.log(JSON.parse(reader.result));
+          this.keystoreInfo = JSON.parse(reader.result);
+          this.$refs.password.showPassword(true);
+        });
+        reader.readAsText(file, "utf-8");
+      },
+
+      /**
+       * @disc: keystore 导入密码框提交
+       * @params: password
+       * @date: 2019-09-02 10:49
+       * @author: Wave
+       */
+      async keystoreImportPassSubmit(password) {
+        this.keystoreInfo.aesPri = this.keystoreInfo.encryptedPrivateKey;
+        this.keystoreInfo.pub = this.keystoreInfo.pubKey;
+        let isPassword = passwordVerification(this.keystoreInfo, password);
+        if (isPassword.success) {
+          this.keystoreInfo.address = isPassword.address;
+          let addressInfo = await getAddressInfoByAddress(this.keystoreInfo.address);
+          if (addressInfo.success) {
+            let newAddressInfo = {...this.keystoreInfo, ...addressInfo.data};
+            localStorage.setItem('accountInfo', JSON.stringify(newAddressInfo));
+            this.toUrl('backupsAddress');
+          } else {
+            this.$message({
+              message: this.$t('tips.tips3') + addressInfo.data.error.message,
+              type: 'error',
+              duration: 2000
+            });
+          }
+        } else {
+          this.$message({message: this.$t('tips.tips4'), type: 'error', duration: 2000});
+        }
+      },
+
+      /**
+       * @disc: 私钥导入账户提交
+       * @params: formName
+       * @date: 2019-08-31 16:01
+       * @author: Wave
+       */
+      keyImport(formName) {
+        this.$refs[formName].validate(async (valid) => {
           if (valid) {
-            this.newAddressInfo = nuls.newAddress(MAIN_INFO.chainId, this.newAddressForm.pass);
-            this.getAddressInfoByAddress(this.newAddressInfo.address);
+            const keyAddressInfo = nuls.importByKey(MAIN_INFO.chainId, this.importForm.keys, this.importForm.pass, API_PREFIX);
+            let addressInfo = await getAddressInfoByAddress(keyAddressInfo.address);
+            //console.log(addressInfo);
+            if (addressInfo.success) {
+              let newAddressInfo = {...keyAddressInfo, ...addressInfo.data};
+              localStorage.setItem('accountInfo', JSON.stringify(newAddressInfo));
+              this.toUrl('backupsAddress');
+            } else {
+              this.$message({
+                message: this.$t('tips.tips5') + addressInfo.data.error.message,
+                type: 'error',
+                duration: 2000
+              });
+            }
+            this.toUrl('backupsAddress');
           } else {
             return false;
           }
         });
       },
 
-      //获取账户信息根据创建的地址
-      async getAddressInfoByAddress(address) {
-        let addressInfo = await getAddressInfoByAddress(address);
-        let newAdressInfo = {...this.newAddressInfo, ...addressInfo.data};
-        if (addressInfo.success) {
-          localStorage.setItem('accountInfo', JSON.stringify(newAdressInfo));
-          this.$router.push({
-            name: 'backupsAddress'
-          });
-        } else {
-          this.$message({message: "创建地址错误: " + addressInfo.data.error.message, type: 'error', duration: 2000});
-        }
+      /**
+       * @disc: 创建账户提交
+       * @params: formName
+       * @date: 2019-08-31 16:01
+       * @author: Wave
+       */
+      newAddressSubmitForm(formName) {
+        this.$refs[formName].validate(async (valid) => {
+          if (valid) {
+            this.newAddressInfo = nuls.newAddress(MAIN_INFO.chainId, this.newAddressForm.pass, API_PREFIX);
+            let addressInfo = await getAddressInfoByAddress(this.newAddressInfo.address);
+            if (addressInfo.success) {
+              let newAdressInfo = {...this.newAddressInfo, ...addressInfo.data};
+              localStorage.setItem('accountInfo', JSON.stringify(newAdressInfo));
+              this.toUrl('backupsAddress');
+            } else {
+              this.$message({
+                message: this.$t('tips.tips6') + addressInfo.data.error.message,
+                type: 'error',
+                duration: 2000
+              });
+            }
+
+          } else {
+            return false;
+          }
+        });
       },
 
       /**
-       * 连接跳转
-       * @param name
+       * @disc: 连接跳转
+       * @params: name, parameter, type
+       * @date: 2019-09-02 11:12
+       * @author: Wave
        */
-      toUrl(name) {
-        this.$router.push({
-          name: name,
-        })
+      toUrl(name, parameter = '', type = 0) {
+        let newConnect = connect(name, parameter, type);
+        if (newConnect.success) {
+          this.$router.push(newConnect.data)
+        }
       },
     }
   }
 </script>
 
 <style lang="less">
-  @import "./../../assets/css/style";
-
-  .new-address {
+  .import-address {
     .bg-white {
+      height: 130px;
     }
-    .tab {
-      .tips {
-        margin: 40px auto;
-        padding: 20px 30px;
-        p {
-          line-height: 24px;
-          i {
-            width: 5px;
-            height: 5px;
-            display: block;
-            float: left;
-            margin: 9px 10px 0 0;
-            border-radius: 5px;
-            background: #000000;
+    .new_import {
+      margin: -90px auto 100px;
+      .el-tabs__header {
+        margin: 0;
+        .el-tabs__nav-wrap {
+          text-align: center;
+          &:after {
+            height: 1px;
+          }
+        }
+        .el-tabs__nav-scroll {
+          .el-tabs__nav {
+            float: none;
+            .el-tabs__active-bar {
+              height: 0;
+            }
+            .el-tabs__item {
+              text-align: center;
+              padding: 0 25px;
+              margin: 10px 20px 20px;
+              border-radius: 4px;
+              @media screen and (max-width: 1024px) {
+                padding: 0 0.5rem;
+              }
+              &:hover {
+                background: linear-gradient(to right, #4ef16a, #0ede94);
+                color: #FFFFFF;
+              }
+            }
+            .is-active {
+              background: linear-gradient(to right, #4ef16a, #0ede94);
+              color: #FFFFFF;
+            }
           }
         }
       }
-      .pass-form {
-
+      .el-tabs__content {
+        background-color: #FFFFFF;
+        .upload_keystore {
+          padding: 100px 0 100px 0;
+          border: 1px solid #E4E7ED;
+        }
+        .import-form {
+          margin: 60px auto 0;
+          @media screen and (max-width: 1024px) {
+            margin: 2rem 0 0 0.5rem;
+            width: 96%;
+          }
+        }
+        .new_address {
+          margin: 60px auto 100px;
+          @media screen and (max-width: 1024px) {
+            margin: 2rem 0 0 0.5rem;
+            width: 96%;
+          }
+        }
       }
-
     }
   }
-
 </style>

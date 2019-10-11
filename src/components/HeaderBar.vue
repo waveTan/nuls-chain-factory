@@ -41,7 +41,6 @@
 </template>
 
 <script>
-  import axios from 'axios'
   import {connect} from '@/api/util'
   import logoBeta from '@/assets/img/logo-beta.svg'
   import logo from '@/assets/img/logo.svg'
@@ -109,7 +108,7 @@
         } else if (key === 'block') {
           this.toUrl('build')
         } else if (key === 'userInfo') {
-          this.getAuthorization(this.accountInfo.address);
+          this.toUrl('user')
         } else if (key === 'backupsAddress') {
           this.toUrl('backupsAddress');
         } else if (key === 'help') {
@@ -134,48 +133,6 @@
           this.toUrl('newAddress')
         }).catch(() => {
         });
-      },
-
-      /**
-       * @disc: 判断地址是否为创建项目者
-       * @params: address
-       * @date: 2019-08-26 16:58
-       * @author: Wave
-       */
-      async getAuthorization(address) {
-        const url = POCM_API_URL + '/pocm/authorization/list';
-        const data = {address: address};
-        await axios.post(url, data)
-          .then((response) => {
-            //console.log(response.data);
-            if (response.data.success) {
-              if (response.data.data.length === 0) {
-                this.toUrl('user')
-              } else {
-                if (response.data.data[0].status === 0) {
-                  this.$router.push({
-                    name: 'newPocm',
-                    query: {
-                      authorizationCode: response.data.data[0].authorizationCode,
-                      releaseId: response.data.data[0].releaseId
-                    }
-                  })
-                } else {
-                  this.$router.push({
-                    name: 'pocmUser',
-                  });
-                  sessionStorage.setItem("data", JSON.stringify(response.data.data[0]))
-                }
-              }
-            } else {
-              this.toUrl('user');
-              this.$message({message: "对不起，获取项目发布者错误！", type: 'error', duration: 3000});
-            }
-          })
-          .catch((error) => {
-            console.log(error);
-            this.$message({message: "对不起，获取项目发布者异常！", type: 'error', duration: 3000});
-          })
       },
 
       /**

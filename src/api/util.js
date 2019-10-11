@@ -1,6 +1,7 @@
+import nuls from 'nuls-sdk-js'
 import {BigNumber} from 'bignumber.js'
+import {MAIN_INFO, API_PREFIX} from '@/config'
 import copy from 'copy-to-clipboard'
-import {MAIN_INFO} from './../config'
 
 /**
  * 10的N 次方
@@ -62,17 +63,43 @@ export function Division(nu, arg) {
 }
 
 /**
+ * 数字除以精度系数
+ */
+export function divisionDecimals(nu, decimals = 8) {
+  let newNu = new BigNumber(Division(nu, Power(decimals)).toString());
+  return newNu.toFormat().replace(/[,]/g, '');
+}
+
+/**
+ * 数字乘以精度系数
+ */
+export function timesDecimals(nu, decimals = 8) {
+  let newNu = new BigNumber(Times(nu, Power(decimals)).toString());
+  return Number(newNu);
+}
+
+/**
  * 复制 copy
  * @param value
  */
 export const copys = (value) => copy(value);
 
 /**
- * 数字除以精度系数
+ * @disc: 验证密码
+ * @params:  accountInfo
+ * @params:  password
+ * @date: 2019-08-22 12:05
+ * @author: Wave
  */
-export function timesDecimals(nu, decimals = 8) {
-  let newNu = new BigNumber(Division(nu, Power(decimals)).toString());
-  return newNu.toFormat().replace(/[,]/g, '');
+export function passwordVerification(accountInfo, password) {
+  let aesPri = accountInfo.aesPri ? accountInfo.aesPri : accountInfo.encryptedPrivateKey;
+  const pri = nuls.decrypteOfAES(aesPri, password);
+  const newAddressInfo = nuls.importByKey(MAIN_INFO.chainId, pri, password, API_PREFIX);
+  if (newAddressInfo.address === accountInfo.address) {
+    return {success: true, pri: pri, pub: accountInfo.pub};
+  } else {
+    return {success: false};
+  }
 }
 
 /**
@@ -142,18 +169,22 @@ export function superLong(string, leng) {
 /**
  * 连接跳转
  * @param name
- * @param parameter {}
+ * @param parameter
  * @param type 0:路由跳转 1：连接跳转（浏览器、其他地址）
  */
-export function connect(name, parameter, type = 0) {
+export function connect(name, parameter, type) {
   if (type === 0) {
-    this.$router.push({
-      name: name,
-      query: parameter
-    });
+    let newQuery = {};
+    let newPush = {name: name};
+    if (!parameter) {
+      if (name === 'projectsInfo') {
+        newQuery = {releaseId: parameter}
+      }
+      newPush.query = newQuery;
+    }
+    return {success: true, data: newPush};
   } else {
-    //shell.openExternal(newUrl);
     window.open(name, '_blank');
+    return {success: false};
   }
-
 }
