@@ -1,32 +1,36 @@
 <template>
   <div class="backups-address bg-gray">
     <div class="bg-white">
-      <h3 class="title">备份</h3>
+      <h3 class="title tc">{{$t('backupsAddress.backupsAddress0')}}</h3>
     </div>
     <div class="tab bg-white w1200 mt_30">
       <div class="address w630">
         <p>
-          您的地址:
-          &nbsp;<span class="yellow">{{accountAddress.address}}</span>
-          &nbsp;<i class="el-icon-document-copy click" @click="copy(accountAddress.address)"></i></p>
+          {{$t('backupsAddress.backupsAddress1')}}
+          <span class="yellow">{{accountAddress.address}}</span>
+          &nbsp;<i class="el-icon-document-copy click" @click="copy(accountAddress.address)"></i>
+        </p>
       </div>
       <div class="tips bg-gray w630">
-        <p class="font14"><i></i>请设置密码用以导入账户、转账、参与共识等重要行为验证</p>
-        <p class="font14"><i></i>请认真保存钱包密码，NULS钱包不存储密码，也无法帮您找回，请务必牢记</p>
+        <p class="font14"><i></i> {{$t('backupsAddress.backupsAddress2')}}</p>
+        <p class="font14"><i></i> {{$t('backupsAddress.backupsAddress3')}}</p>
       </div>
 
       <div class="w630 tc btn-next">
         <div>
-          <el-button type="success" @click="backupsKey">私钥备份</el-button>
+          <el-button type="success" @click="backupsKeyStore">{{$t('backupsAddress.backupsAddress41')}}</el-button>
         </div>
         <div class="mt_20">
-          <el-button @click="toUrl('home')">完成备份</el-button>
+          <el-button type="success" @click="backupsKey">{{$t('backupsAddress.backupsAddress4')}}</el-button>
+        </div>
+        <div class="mt_20">
+          <el-button @click="toUrl('home')"> {{$t('backupsAddress.backupsAddress5')}}</el-button>
         </div>
       </div>
     </div>
     <Password ref="password" @passwordSubmit="passSubmit">
     </Password>
-    <el-dialog title="安全警告:私钥未经加密，备份存在风险，请保存到安全的地方，建议使用Keystore进行备份" width="40%"
+    <el-dialog :title="$t('backupsAddress.backupsAddress6')" width="40%"
                :visible.sync="keyDialog"
                :close-on-click-modal="false"
                :close-on-press-escape="false"
@@ -36,16 +40,15 @@
         {{accountAddress.pri}}
       </p>
       <span slot="footer" class="dialog-footer">
-        <el-button type="success" @click="copy(accountAddress.pri)">复制</el-button>
+        <el-button type="success" @click="copy(accountAddress.pri)">{{$t('public.copy')}}</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
-  import nuls from 'nuls-sdk-js'
   import Password from '@/components/PasswordBar'
-  import {chainID} from '@/api/util'
+  import {copys, passwordVerification} from '@/api/util'
 
   export default {
     components: {Password},
@@ -53,6 +56,7 @@
       return {
         accountAddress: JSON.parse(localStorage.getItem('accountInfo')),
         keyDialog: false, //key弹框
+        backupsType: 0,// 备份类型 0:keystore 1:key
       };
     },
     methods: {
@@ -62,11 +66,24 @@
        * @param password
        **/
       async passSubmit(password) {
-        const pri = nuls.decrypteOfAES(this.accountAddress.aesPri, password);
-        const newAddressInfo = nuls.importByKey(chainID(), pri, password);
-        if (newAddressInfo.address === this.accountAddress.address) {
+        let isPassword = await passwordVerification(this.accountAddress, password);
+        if (!isPassword.success) {
+          this.$message({message: this.$t('tips.tips4'), type: 'error', duration: 3000});
+          return;
+        }
+        if (this.backupsType === 0) {
+          let FileSaver = require('file-saver');
+          let fileInfo = {
+            address: isPassword.address,
+            encryptedPrivateKey: isPassword.aesPri,
+            pubKey: isPassword.pub,
+            priKey: null
+          };
+          let blob = new Blob([JSON.stringify(fileInfo)], {type: "text/plain;charset=utf-8"});
+          FileSaver.saveAs(blob, isPassword.address + ".keystore");
+        } else {
           this.keyDialog = true;
-          this.accountAddress.pri = pri;
+          this.accountAddress.pri = isPassword.pri;
         }
       },
 
@@ -74,7 +91,26 @@
        *  备份私钥
        **/
       backupsKey() {
+        this.backupsType = 1;
         this.$refs.password.showPassword(true);
+      },
+
+      /**
+       * @disc: 备份keystore
+       * @date: 2019-10-12 14:24
+       * @author: Wave
+       */
+      backupsKeyStore() {
+        try {
+          let isFileSaverSupported = !!new Blob;
+          if (isFileSaverSupported) {
+            this.backupsType = 0;
+            this.$refs.password.showPassword(true);
+          }
+        } catch (e) {
+          this.$message({message: this.$t('tips.tips7'), type: 'error', duration: 3000});
+          console.log(e);
+        }
       },
 
       /**
@@ -92,8 +128,8 @@
        * @param sting
        **/
       copy(sting) {
-        console.log(sting);
-        this.$message({message: "复制完成", type: 'success', duration: 1000});
+        copys(sting);
+        this.$message({message: this.$t('public.copyComplete'), type: 'success', duration: 1000});
       },
     }
   }
@@ -104,20 +140,38 @@
 
   .backups-address {
     .bg-white {
-      .title{
-        height: 100px;
+      height: 100px;
+      .title {
+        margin: 20px auto 10px;
+        font-size: 30px;
+        @media screen and (max-width: 1024px) {
+          margin: 0 auto;
+          line-height: 4rem;
+        }
       }
     }
     .tab {
       .address {
         margin: 20px auto 0;
         font-size: 18px;
+        @media screen and (max-width: 1024px) {
+          margin: 1rem 0 0 1rem;
+          font-size: 0.8rem;
+        }
       }
       .tips {
         margin: 40px auto;
         padding: 20px 30px;
+        @media screen and (max-width: 1024px) {
+          padding: 1rem 0.8rem;
+          width: 100%;
+        }
         p {
           line-height: 24px;
+          @media screen and (max-width: 1024px) {
+            font-size: 0.7rem;
+            word-wrap: break-word;
+          }
           i {
             width: 5px;
             height: 5px;
@@ -128,6 +182,11 @@
             background: #000000;
           }
         }
+      }
+    }
+    .btn-next {
+      @media screen and (max-width: 1024px) {
+        width: 100%;
       }
     }
   }

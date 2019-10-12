@@ -66,19 +66,19 @@
   .upload {
     .upload_file {
       .file {
-        width: 60px;
-        height: 60px;
+        width: 40px;
+        height: 40px;
         border: 1px dashed #d9d9d9;
         text-align: center;
         &:hover {
           border-color: #409EFF;
         }
         img{
-          width: 60px;
-          height: 60px;
+          width: 40px;
+          height: 40px;
         }
         .el-icon-plus{
-          margin: 15px 0 0 0;
+          margin: 5px 0 0 0;
           font-size: 28px;
         }
       }

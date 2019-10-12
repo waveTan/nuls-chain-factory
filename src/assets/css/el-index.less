@@ -12414,7 +12414,7 @@
   text-align: center;
   -webkit-transition: all .3s;
   transition: all .3s;
-  line-height: 40px
+  line-height: 30px
 }
 
 .el-input__icon:after {
@@ -15230,6 +15230,15 @@
 }
 
 .el-form {
+  .el-form-item{
+    .el-form-item__label {
+      line-height: 20px !important;
+    }
+    .el-form-item__content{
+      line-height: 25px !important;
+    }
+  }
+
   .form-bnt {
     margin: 40px 0 0 0;
     text-align: center;
@@ -15349,3 +15358,14 @@
     background: linear-gradient(to right, #0ede94, #4ef16a) !important;
   }
 }
+
+.el-input{
+  .el-input__suffix{
+    .el-input__suffix-inner{
+      .el-input__icon{
+        line-height: 30px !important;
+      }
+    }
+  }
+}
+

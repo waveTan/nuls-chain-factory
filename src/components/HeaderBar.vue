@@ -6,7 +6,7 @@
       </div>
       <div class="nav fl">
         <el-menu :default-active="activeIndex" class="fl" mode="horizontal" @select="handleSelect">
-          <el-menu-item index="warehouse">{{$t('nav.moduleWarehouse')}}</el-menu-item>
+          <el-menu-item index="warehouse" v-show="false">{{$t('nav.moduleWarehouse')}}</el-menu-item>
           <el-menu-item index="block">{{$t('nav.buildingBlock')}}</el-menu-item>
         </el-menu>
         <div class="user fr tc">

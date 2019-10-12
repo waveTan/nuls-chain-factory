@@ -5,235 +5,174 @@
     </div>
 
     <div class="w1200 mt_30 bg-white info">
-      <el-steps :active="stepsActive" finish-status="success" class="step">
-        <el-step title="选择业务场景" icon="el-icon-edit"></el-step>
-        <el-step title="填写基本信息" icon="el-icon-edit-outline"></el-step>
-        <el-step title="配置经济模型" icon="el-icon-tickets"></el-step>
-        <el-step title="配置创世块" icon="el-icon-folder"></el-step>
-        <el-step title="设置跨链" icon="el-icon-folder-add"></el-step>
-        <!-- <el-step title="申请节点" icon="el-icon-tickets"></el-step>-->
-        <el-step title="确认订单" icon="el-icon-monitor"></el-step>
-      </el-steps>
 
-      <!--选择业务场景-->
-      <div class="steps" v-show="stepsActive ===0">
-        <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''" @click="changeSteps(1)">
-          <h6>分布式账本版</h6>
-          <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改</p>
-          <ul>
-            <li>金融结算</li>
-            <li>供应链</li>
-            <li>分布式证书</li>
-            <li>防伪溯源</li>
-            <li>发票</li>
-          </ul>
-        </div>
-        <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''" @click="changeSteps(2)">
-          <h6>智能合约版</h6>
-          <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
-          <ul>
-            <li>游戏</li>
-            <li>积分系统</li>
-            <li>公司治理</li>
-            <li>社交应用</li>
-          </ul>
-        </div>
-        <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" @click="changeSteps(3)">
-          <h6>POCM版</h6>
-          <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
-          <ul>
-            <li>游戏</li>
-            <li>积分系统</li>
-            <li>公司治理</li>
-            <li>社交应用</li>
-          </ul>
-        </div>
-        <div class="steps-scene" :class="isSteps===4 ? 'is-active' : ''" @click="changeSteps(4)" v-show="false">
-          <h6>自定义版本</h6>
-          <p>该版本可将业务逻辑以模块的形式独立并置于区块链底层，该版本正在内测中，请耐心等待...</p>
-          <ul>
-            <li>业务场景</li>
-            <li>根据实际业务进行定制</li>
-          </ul>
-        </div>
-        <el-button type="success" class="btn-next" @click="stepsNext">下一步</el-button>
-      </div>
-
-      <!--填写基本信息-->
-      <el-row class="steps-info" v-show="stepsActive ===1">
-        <el-form :model="infoForm" :rules="infoRules" ref="infoForm" status-icon class="steps-infoForm"
-                 :hide-required-asterisk="true">
-          <el-form-item label="链名称" prop="name">
-            <el-input v-model="infoForm.name" @change="changeName">
-            </el-input>
-          </el-form-item>
-          <el-form-item label="链Logo" prop="logoUrl">
-            <UploadBar @func="getMsgFormSon"></UploadBar>
-          </el-form-item>
-          <el-form-item label="通证简称" prop="symbol">
-            <el-input v-model="infoForm.symbol"></el-input>
-          </el-form-item>
-          <el-form-item label="发行总量" prop="total">
-            <el-input v-model="infoForm.total"></el-input>
-          </el-form-item>
-          <el-form-item label="精度" prop="precision">
-            <el-input v-model="infoForm.precision"></el-input>
-          </el-form-item>
-          <el-form-item label="高级" prop="delivery">
-            <el-switch v-model="infoForm.senior"></el-switch>
-          </el-form-item>
-          <el-form-item label="" prop="desc" v-show="infoForm.senior">
-            <el-input type="textarea" :rows="5" v-model="infoForm.desc"></el-input>
-          </el-form-item>
-          <el-form-item class="btn-next tc">
-            <el-button type="success" @click="infoSubmitForm('infoForm')">下一步</el-button>
-          </el-form-item>
-        </el-form>
-      </el-row>
-
-      <!--通胀模型-->
-      <div class="steps-inflation" v-show="stepsActive ===2">
-        <div class="from-div cb w630">
-          <el-form :model="inflationForm" :rules="inflationRules" ref="inflationForm" class="inflation-form">
-            <el-form-item label="通胀金额" prop="netFee">
-              <el-input v-model="inflationForm.amount" placeholder="初始通胀金额">
-              </el-input>
-            </el-form-item>
-            <el-form-item label="开始时间" prop="seedNode1">
-              <div class="cd time">
-                <el-date-picker v-model="inflationForm.startTime" type="datetime" placeholder="通胀开始计算时间">
-                </el-date-picker>
-              </div>
-            </el-form-item>
-            <el-form-item label="通缩比例" prop="seedNode2">
-              <el-input v-model="inflationForm.proportion" placeholder="通缩比例">
-              </el-input>
-            </el-form-item>
-            <el-form-item label="间隔时间/天" prop="seedNode3">
-              <el-input v-model="inflationForm.intervalTime" placeholder="通缩间隔时间">
-              </el-input>
-            </el-form-item>
-            <el-form-item class="btn-next tc">
-              <el-button type="success" @click="inflationSubmitForm('inflationForm')">下一步</el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-
-      </div>
-
-      <!--配置创世块-->
-      <el-row class="steps-node" v-show="stepsActive ===3">
-        <el-form :model="nodeForm" ref="nodeForm" class="steps-nodeForm">
-          <el-col class="address bg-gray" v-for="(domain, index) in nodeForm.addressList" :key="index">
-            <div class="node-address">
-              <p>地址{{index}}:{{domain.address}}</p>
-              <span>
+      <el-tabs tab-position="left">
+        <el-tab-pane label="业务场景">
+          <!--选择业务场景-->
+          <div class="steps">
+            <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''" @click="changeSteps(1)">
+              <h6>分布式账本版</h6>
+              <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改</p>
+              <ul>
+                <li>金融结算</li>
+                <li>供应链</li>
+                <li>分布式证书</li>
+                <li>防伪溯源</li>
+                <li>发票</li>
+              </ul>
+            </div>
+            <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''" @click="changeSteps(2)">
+              <h6>智能合约版</h6>
+              <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
+              <ul>
+                <li>游戏</li>
+                <li>积分系统</li>
+                <li>公司治理</li>
+                <li>社交应用</li>
+              </ul>
+            </div>
+            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" @click="changeSteps(3)">
+              <h6>POCM版</h6>
+              <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
+              <ul>
+                <li>游戏</li>
+                <li>积分系统</li>
+                <li>公司治理</li>
+                <li>社交应用</li>
+              </ul>
+            </div>
+            <div class="steps-scene" :class="isSteps===4 ? 'is-active' : ''" @click="changeSteps(4)" v-show="false">
+              <h6>自定义版本</h6>
+              <p>该版本可将业务逻辑以模块的形式独立并置于区块链底层，该版本正在内测中，请耐心等待...</p>
+              <ul>
+                <li>业务场景</li>
+                <li>根据实际业务进行定制</li>
+              </ul>
+            </div>
+            <el-button type="success" class="btn-next" @click="stepsNext">确 定</el-button>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane label="填写基本信息">
+          <!--填写基本信息-->
+          <el-row class="steps-info">
+            <el-form :model="infoForm" :rules="infoRules" ref="infoForm" status-icon class="steps-infoForm"
+                     :hide-required-asterisk="true">
+              <el-form-item label="链名称" prop="name">
+                <el-input v-model="infoForm.name" @change="changeName">
+                </el-input>
+              </el-form-item>
+              <el-form-item label="链Logo" prop="logoUrl">
+                <UploadBar @func="getMsgFormSon"></UploadBar>
+              </el-form-item>
+              <el-form-item label="地址前缀" prop="precision">
+                <el-input v-model="infoForm.prefix"></el-input>
+              </el-form-item>
+              <el-form-item label="通证简称" prop="symbol">
+                <el-input v-model="infoForm.symbol"></el-input>
+              </el-form-item>
+              <el-form-item label="发行总量" prop="total">
+                <el-input v-model="infoForm.total"></el-input>
+              </el-form-item>
+              <el-form-item label="精度" prop="precision">
+                <el-input v-model="infoForm.precision"></el-input>
+              </el-form-item>
+              <el-form-item label="通胀金额" prop="netFee">
+                <el-input v-model="inflationForm.amount" placeholder="初始通胀金额">
+                </el-input>
+              </el-form-item>
+              <el-form-item label="开始时间" prop="seedNode1">
+                <div class="cd time">
+                  <el-date-picker v-model="inflationForm.startTime" type="datetime" placeholder="通胀开始计算时间">
+                  </el-date-picker>
+                </div>
+              </el-form-item>
+              <el-form-item label="通缩比例" prop="seedNode2">
+                <el-input v-model="inflationForm.proportion" placeholder="通缩比例">
+                </el-input>
+              </el-form-item>
+              <el-form-item label="间隔时间/天" prop="seedNode3">
+                <el-input v-model="inflationForm.intervalTime" placeholder="通缩间隔时间">
+                </el-input>
+              </el-form-item>
+              <el-form-item label="高级" prop="delivery">
+                <el-switch v-model="infoForm.senior"></el-switch>
+              </el-form-item>
+              <el-form-item label="" prop="desc" v-show="infoForm.senior">
+                <el-input type="textarea" :rows="5" v-model="infoForm.desc"></el-input>
+              </el-form-item>
+            </el-form>
+          </el-row>
+        </el-tab-pane>
+        <el-tab-pane label="配置创世块">
+          <!--配置创世块-->
+          <el-row class="steps-node">
+            <el-form :model="nodeForm" ref="nodeForm" class="steps-nodeForm">
+              <el-col class="address bg-gray" v-for="(domain, index) in nodeForm.addressList" :key="index">
+                <div class="node-address">
+                  <p>地址{{index}}:{{domain.address}}</p>
+                  <span>
                 <i class="el-icon-circle-plus-outline click" @click="addDomain"></i>
                 <i class="el-icon-remove-outline click" @click.prevent="removeDomain(domain)"
                    v-show="nodeForm.addressList.length !==1 "></i>
               </span>
+                </div>
+                <div class="node-form cb">
+                  <el-form-item label="通证数量" prop="pass" class="number fl">
+                    <el-input v-model.number="domain.number" type="number"></el-input>
+                  </el-form-item>
+                  <el-form-item label="锁定时间" prop="pass" class="time fr">
+                    <el-date-picker v-model="domain.time" type="datetime" placeholder="选择日期时间" default-time="12:00:00">
+                    </el-date-picker>
+                  </el-form-item>
+                </div>
+              </el-col>
+              <el-form-item class="btn-next cb">
+                <div class="btn">
+                  <el-button type="success" @click="nodeSubmitForm('nodeForm')">备份地址私钥</el-button>
+                </div>
+                <div class="btn">
+                  <el-button @click="nodeNext">下一步</el-button>
+                </div>
+              </el-form-item>
+            </el-form>
+
+            <el-dialog title="备份地址私钥列" :visible.sync="backupsDialog" width="80%" class="backups-dialog">
+              <el-table :data="addressKeyData" border>
+                <el-table-column type="index" label="序号" width="50">
+                </el-table-column>
+                <el-table-column property="address" label="地址" width="400">
+                </el-table-column>
+                <el-table-column property="pri" label="私钥" min-width="300">
+                </el-table-column>
+              </el-table>
+              <!--<el-button type="success" class="btn-next">复制</el-button>-->
+            </el-dialog>
+
+          </el-row>
+        </el-tab-pane>
+        <el-tab-pane label="设置跨链">
+          <!--设置跨链-->
+          <el-row class="steps-set">
+            <el-col class="tc radio">
+              <el-radio v-model="isPartake" label="0">参与跨链</el-radio>
+              <el-radio v-model="isPartake" label="1">不参与跨链</el-radio>
+            </el-col>
+            <div class="tc tips font16">
+              <p v-show="isPartake ==='0'">需缴纳跨链抵押金: <span class="yellow">20000</span> <font class="fCN">NULS</font></p>
+              <p v-show="isPartake ==='1'">不参与跨链，无需缴纳跨链抵押金</p>
             </div>
-            <div class="node-form cb">
-              <el-form-item label="通证数量" prop="pass" class="number fl">
-                <el-input v-model.number="domain.number" type="number"></el-input>
-              </el-form-item>
-              <el-form-item label="锁定时间" prop="pass" class="time fr">
-                <el-date-picker v-model="domain.time" type="datetime" placeholder="选择日期时间" default-time="12:00:00">
-                </el-date-picker>
-              </el-form-item>
+            <div class="btn-next tc">
+              <div class="balance">
+                当前账户余额: {{accountInfo.balance}} <span class="fCN">NULS</span>
+              </div>
+              <div class="btn">
+                <el-button type="success" @click="next">下一步</el-button>
+              </div>
             </div>
-          </el-col>
-          <el-form-item class="btn-next cb">
-            <div class="btn">
-              <el-button type="success" @click="nodeSubmitForm('nodeForm')">备份地址私钥</el-button>
-            </div>
-            <div class="btn">
-              <el-button @click="nodeNext">下一步</el-button>
-            </div>
-          </el-form-item>
-        </el-form>
 
-        <el-dialog title="备份地址私钥列" :visible.sync="backupsDialog" width="80%" class="backups-dialog">
-          <el-table :data="addressKeyData" border>
-            <el-table-column type="index" label="序号" width="50">
-            </el-table-column>
-            <el-table-column property="address" label="地址" width="400">
-            </el-table-column>
-            <el-table-column property="pri" label="私钥" min-width="300">
-            </el-table-column>
-          </el-table>
-          <!--<el-button type="success" class="btn-next">复制</el-button>-->
-        </el-dialog>
-
-      </el-row>
-
-      <!--设置跨链-->
-      <el-row class="steps-set" v-show="stepsActive ===4">
-        <el-col class="tc radio">
-          <el-radio v-model="isPartake" label="0">参与跨链</el-radio>
-          <el-radio v-model="isPartake" label="1">不参与跨链</el-radio>
-        </el-col>
-        <div class="tc tips font16">
-          <p v-show="isPartake ==='0'">需缴纳跨链抵押金: <span class="yellow">20000</span> <font class="fCN">NULS</font></p>
-          <p v-show="isPartake ==='1'">不参与跨链，无需缴纳跨链抵押金</p>
-        </div>
-        <div class="btn-next tc">
-          <div class="btn">
-            <el-link type="info">当前账户余额: {{accountInfo.balance}} <span class="fCN">NULS</span></el-link>
-          </div>
-          <div class="btn">
-            <el-button type="success" @click="next">下一步</el-button>
-          </div>
-        </div>
-
-      </el-row>
-
-      <!--申请节点-->
-      <div class="steps-apply" v-show="stepsActive ===4" v-if="false">
-        <el-col class="tc radio">
-          <el-radio v-model="isApply" label="0">云节点运行 <i class="el-icon-warning"></i></el-radio>
-          <el-radio v-model="isApply" label="1">自行部署 <i class="el-icon-warning"></i></el-radio>
-        </el-col>
-        <div class="from-div cb">
-          <el-form :model="applyForm" :rules="applyRules" ref="applyForm" class="apply-form">
-            <div class="cloud-node" v-show="isApply==='0'">
-              <el-form-item label="运行时间" prop="runTime">
-                <el-select v-model="applyForm.runTime" placeholder="">
-                  <el-option label="10K" value="10"></el-option>
-                  <el-option label="20K" value="20"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="节点" prop="node">
-                <el-select v-model="applyForm.node" placeholder="">
-                  <el-option label="1个" value="1"></el-option>
-                  <el-option label="5个" value="5"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="网络维护费" prop="netFee">
-                <el-input v-model="applyForm.netFee" placeholder="全部节点维护费" disabled>
-                </el-input>
-                <i class="el-icon-warning fr"></i>
-              </el-form-item>
-            </div>
-            <div class="selt-deploy" v-show="isApply==='1'">
-              <el-form-item label="种子节点一的IP/域名" prop="seedNode1">
-                <el-input v-model="applyForm.seedNode1" placeholder="种子节点一的IP/域名"></el-input>
-              </el-form-item>
-              <el-form-item label="种子节点二的IP/域名" prop="seedNode2">
-                <el-input v-model="applyForm.seedNode2" placeholder="种子节点二的IP/域名"></el-input>
-              </el-form-item>
-              <el-form-item label="种子节点三的IP/域名" prop="seedNode3">
-                <el-input v-model="applyForm.seedNode3" placeholder="种子节点三的IP/域名"></el-input>
-              </el-form-item>
-            </div>
-            <el-form-item class="btn-next tc">
-              <el-button type="success" @click="applySubmitForm('applyForm')">下一步</el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-
-      </div>
-
+          </el-row>
+        </el-tab-pane>
+      </el-tabs>
       <!--确认订单-->
       <div class="steps-confirm" v-show="stepsActive ===5">
         <div class="w700">
@@ -250,6 +189,7 @@
               <font class="fl"><img :src="infoForm.logoUrl"/></font>
             </p>
             <p class="cb"><span class="fl">链名称</span><font class="fl">{{infoForm.name}}</font></p>
+            <p class="cb"><span class="fl">地址前缀</span><font class="fl">{{infoForm.prefix}}</font></p>
             <p class="cb"><span class="fl">通证名称</span><font class="fl">{{infoForm.symbol}}</font></p>
             <p class="cb"><span class="fl">进度</span><font class="fl">{{infoForm.precision}}</font></p>
             <p class="cb"><span class="fl">总发行量</span><font class="fl">{{infoForm.total}}</font></p>
@@ -325,7 +265,7 @@
 
 <script>
   import nuls from 'nuls-sdk-js'
-  import {MAIN_INFO,API_COFIG} from '@/config'
+  import {MAIN_INFO, API_COFIG} from '@/config'
   import UploadBar from './../../components/UploadBar';
 
   export default {
@@ -370,7 +310,7 @@
       };
 
       return {
-        accountInfo: JSON.parse(localStorage.getItem('accountInfo')),//地址信息
+        accountInfo: localStorage.hasOwnProperty('accountInfo') ? JSON.parse(localStorage.getItem('accountInfo')) : {},//地址信息
 
         stepsActive: 0,//步骤条
         isSteps: 1,//业务场景选中模块
@@ -379,11 +319,12 @@
         infoForm: {
           name: 'wave',
           logoUrl: 'http://zlj-1.oss-cn-hangzhou.aliyuncs.com/1565085680556.png',
+          prefix: 'wave',
           symbol: 'wave',
           total: '88888',
           precision: '5',
           senior: false,
-          desc:'',
+          desc: '',
         },
         infoRules: {
           name: [
@@ -471,7 +412,7 @@
       /**
        * 业务类型下一步
        **/
-      stepsNext(){
+      stepsNext() {
         this.next();
         console.log(API_COFIG);
         this.infoForm.desc = JSON.stringify(API_COFIG);
@@ -481,7 +422,7 @@
        * 验证名称
        **/
       async changeName() {
-        //console.log(this.infoForm.name);
+        console.log(this.infoForm.name);
         await this.$post('/chain/check', {'chainId': '2', 'address': 'tNULSeBaMvH8TmMZUPQKvc19qeLrD7oN643aBL'})
           .then((response) => {
             console.log(response);
@@ -559,7 +500,6 @@
        * 创世块下一步
        **/
       nodeNext() {
-        console.log(this.nodeForm);
         let newNodeList = this.nodeForm.addressList;
         let nuData = newNodeList.filter((v) => {
           return v.number === ''
@@ -571,6 +511,7 @@
           for (let item of this.nodeForm.addressList) {
             item.time = new Date(item.time).getTime()
           }
+          console.log(nuData);
           this.next()
         } else {
           this.$message({message: "有未填写参数 ", type: 'error', duration: 2000});
@@ -582,7 +523,7 @@
        * @param formName
        * */
       applySubmitForm(formName) {
-        console.log(this.applyForm);
+        console.log(formName);
         this.$refs[formName].validate((valid) => {
           if (valid) {
             this.next();
@@ -626,11 +567,11 @@
     .info {
       min-height: 500px;
       border: @BD1;
-      .step{
+      .step {
         margin: 30px 10px;
       }
       .steps {
-        margin: 30px 100px 100px;
+        margin: 30px 50px 100px;
         text-align: center;
         .btn-next {
           margin: 100px auto 0;
@@ -639,17 +580,17 @@
       }
       .steps-scene {
         border: @BD1;
-        margin: 0 30px 0;
+        margin: 0 15px 0;
         width: 290px;
         text-align: left;
         cursor: pointer;
         z-index: 3;
         float: left;
         &:first-child {
-          margin: 0 30px 0 0;
+          margin: 0 15px 0 0;
         }
-        &:nth-child(3n){
-          margin: 0 0 0 30px;
+        &:nth-child(3n) {
+          margin: 0 0 0 15px;
         }
         h6 {
           background-color: #dfe4ef;
@@ -783,24 +724,32 @@
           }
           .btn-next {
             z-index: 2;
-            margin: 10px auto 0;
+            //margin: 10px auto 0;
             .btn {
               text-align: center;
-              margin: 20px 0 30px 0;
+              margin: 20px auto 30px !important;
+              width: 320px !important;
+              padding: 0 !important;
+              border-radius: 4px !important;
+              height: 40px !important;
+              .el-button--default {
+                span {
+                  color: #17202e;
+                }
+              }
             }
           }
         }
 
         .backups-dialog {
           .el-dialog__body {
-            background-color: #FFFFFF;
-            padding: 20px 30px 50px;
+            background-color: #FFFFFF !important;
+            padding: 20px 30px 50px !important;
             .el-table {
 
             }
           }
         }
-
       }
 
       .steps-set {
@@ -815,11 +764,17 @@
           }
         }
         .btn-next {
-          .el-link--info {
-            .el-link--inner {
-              font-size: 16px;
-              line-height: 40px;
-            }
+          .balance {
+            font-size: 16px;
+            line-height: 40px;
+          }
+          .btn {
+            text-align: center;
+            margin: 20px auto 30px !important;
+            width: 320px !important;
+            padding: 0 !important;
+            border-radius: 4px !important;
+            height: 40px !important;
           }
         }
       }
