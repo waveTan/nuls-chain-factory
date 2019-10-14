@@ -12,8 +12,10 @@ export const RUN_DEV = true;
 export const MAIN_INFO = {chainId:1,assetsId:1};
 //链前缀
 export const API_PREFIX = 'NULS';
-//正式、测试网络的api
+//网络数据api
 export let API_URL = IS_DEV ? 'https://public1.nuls.io' : 'https://public1.nuls.io';
+//接口数据api
+export let API_DATA_URL = IS_DEV ? 'http://192.168.1.160:8080/' : 'http://192.168.1.160:8080/';
 //请求最迟时间
 export const API_TIME = '8000';
 //浏览器连接地址

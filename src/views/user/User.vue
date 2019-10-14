@@ -53,7 +53,7 @@
 <script>
   import axios from 'axios'
   import {API_URL, MAIN_INFO} from '@/config'
-  import {timesDecimals} from '@/api/util'
+  import {divisionDecimals} from '@/api/util'
 
   export default {
     data() {
@@ -98,7 +98,7 @@
           .then((response) => {
             //console.log(response.data);
             if (response.data.hasOwnProperty("result")) {
-              this.accountAddress.balance = timesDecimals(response.data.result.balance);
+              this.accountAddress.balance = divisionDecimals(response.data.result.balance);
               localStorage.setItem('accountInfo', JSON.stringify(this.accountAddress));
             } else {
               this.accountAddress.balance = 0;

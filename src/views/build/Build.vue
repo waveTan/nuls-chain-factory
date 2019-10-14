@@ -10,7 +10,7 @@
         <el-tab-pane label="业务场景">
           <!--选择业务场景-->
           <div class="steps">
-            <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''" @click="changeSteps(1)">
+            <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''">
               <h6>分布式账本版</h6>
               <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改</p>
               <ul>
@@ -21,7 +21,7 @@
                 <li>发票</li>
               </ul>
             </div>
-            <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''" @click="changeSteps(2)">
+            <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''">
               <h6>智能合约版</h6>
               <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
               <ul>
@@ -31,7 +31,7 @@
                 <li>社交应用</li>
               </ul>
             </div>
-            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" @click="changeSteps(3)">
+            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" >
               <h6>POCM版</h6>
               <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
               <ul>
@@ -39,14 +39,6 @@
                 <li>积分系统</li>
                 <li>公司治理</li>
                 <li>社交应用</li>
-              </ul>
-            </div>
-            <div class="steps-scene" :class="isSteps===4 ? 'is-active' : ''" @click="changeSteps(4)" v-show="false">
-              <h6>自定义版本</h6>
-              <p>该版本可将业务逻辑以模块的形式独立并置于区块链底层，该版本正在内测中，请耐心等待...</p>
-              <ul>
-                <li>业务场景</li>
-                <li>根据实际业务进行定制</li>
               </ul>
             </div>
             <el-button type="success" class="btn-next" @click="stepsNext">确 定</el-button>
@@ -76,29 +68,32 @@
               <el-form-item label="精度" prop="precision">
                 <el-input v-model="infoForm.precision"></el-input>
               </el-form-item>
-              <el-form-item label="通胀金额" prop="netFee">
-                <el-input v-model="inflationForm.amount" placeholder="初始通胀金额">
+              <el-form-item label="通胀金额" prop="amount">
+                <el-input v-model="infoForm.amount" placeholder="初始通胀金额">
                 </el-input>
               </el-form-item>
-              <el-form-item label="开始时间" prop="seedNode1">
+              <el-form-item label="开始时间" prop="startTime">
                 <div class="cd time">
-                  <el-date-picker v-model="inflationForm.startTime" type="datetime" placeholder="通胀开始计算时间">
+                  <el-date-picker v-model="infoForm.startTime" type="datetime" placeholder="通胀开始计算时间">
                   </el-date-picker>
                 </div>
               </el-form-item>
-              <el-form-item label="通缩比例" prop="seedNode2">
-                <el-input v-model="inflationForm.proportion" placeholder="通缩比例">
+              <el-form-item label="通缩比例" prop="proportion">
+                <el-input v-model="infoForm.proportion" placeholder="通缩比例">
                 </el-input>
               </el-form-item>
-              <el-form-item label="间隔时间/天" prop="seedNode3">
-                <el-input v-model="inflationForm.intervalTime" placeholder="通缩间隔时间">
+              <el-form-item label="间隔时间/天" prop="intervalTime">
+                <el-input v-model="infoForm.intervalTime" placeholder="通缩间隔时间">
                 </el-input>
               </el-form-item>
-              <el-form-item label="高级" prop="delivery">
+              <el-form-item label="高级">
                 <el-switch v-model="infoForm.senior"></el-switch>
               </el-form-item>
-              <el-form-item label="" prop="desc" v-show="infoForm.senior">
+              <el-form-item label="" v-show="infoForm.senior">
                 <el-input type="textarea" :rows="5" v-model="infoForm.desc"></el-input>
+              </el-form-item>
+              <el-form-item class="tc">
+                <el-button type="primary" class="btn-next" @click="infoSubmitForm(infoForm)">确 定</el-button>
               </el-form-item>
             </el-form>
           </el-row>
@@ -265,8 +260,9 @@
 
 <script>
   import nuls from 'nuls-sdk-js'
-  import {MAIN_INFO, API_COFIG} from '@/config'
-  import UploadBar from './../../components/UploadBar';
+  import axios from 'axios'
+  import {MAIN_INFO, API_COFIG, API_DATA_URL} from '@/config'
+  import UploadBar from '@/components/UploadBar';
 
   export default {
     data() {
@@ -283,6 +279,13 @@
       let validateLogo = (rule, value, callback) => {
         if (value === '') {
           callback(new Error('请上传链logo'));
+        } else {
+          callback();
+        }
+      };
+      let validatePrefix = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请输入地址前缀'));
         } else {
           callback();
         }
@@ -308,6 +311,34 @@
           callback();
         }
       };
+      let validateAmount = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入通货膨胀金额'));
+        } else {
+          callback();
+        }
+      };
+      let validateIntervalTime = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请选择开始时间'));
+        } else {
+          callback();
+        }
+      };
+      let validateProportion = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入通缩比例'));
+        } else {
+          callback();
+        }
+      };
+      let validateStartTime = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入间隔时间'));
+        } else {
+          callback();
+        }
+      };
 
       return {
         accountInfo: localStorage.hasOwnProperty('accountInfo') ? JSON.parse(localStorage.getItem('accountInfo')) : {},//地址信息
@@ -323,8 +354,12 @@
           symbol: 'wave',
           total: '88888',
           precision: '5',
+          amount: 5000000000,
+          startTime: '2019-08-23 00:00:00',
+          proportion: '10',
+          intervalTime: '365',
           senior: false,
-          desc: '',
+          desc: JSON.stringify(API_COFIG),
         },
         infoRules: {
           name: [
@@ -332,6 +367,9 @@
           ],
           logoUrl: [
             {validator: validateLogo, trigger: 'blur'},
+          ],
+          prefix: [
+            {validator: validatePrefix, trigger: 'blur'},
           ],
           symbol: [
             {validator: validateSymbol, trigger: 'blur'},
@@ -342,16 +380,19 @@
           precision: [
             {validator: validatePrecision, trigger: 'blur'},
           ],
+          amount: [
+            {validator: validateAmount, trigger: 'blur'},
+          ],
+          intervalTime: [
+            {validator: validateIntervalTime, trigger: 'blur'},
+          ],
+          proportion: [
+            {validator: validateProportion, trigger: 'blur'},
+          ],
+          startTime: [
+            {validator: validateStartTime, trigger: 'blur'},
+          ],
         },
-
-        //经济模型表单
-        inflationForm: {
-          amount: 5000000000,
-          startTime: '2019-08-23 00:00:00',
-          proportion: '10',
-          intervalTime: '365',
-        },
-        inflationRules: {},
 
         //创世块表单
         nodeForm: {
@@ -394,6 +435,7 @@
     },
     watch: {},
     created() {
+      this.getAccount(this.accountInfo.address);
       //this.addDomain();
     },
     mounted() {
@@ -442,13 +484,48 @@
       },
 
       /**
+       * @disc: 获取账户信息
+       * @params: address
+       * @date: 2019-10-14 11:38
+       * @author: Wave
+       */
+      async getAccount(address) {
+        const url = API_DATA_URL + '/chain/get/' + address;
+        try {
+          let res = await axios.post(url);
+          console.log(res.data);
+        } catch (err) {
+          console.log(err);
+        }
+      },
+
+      /**
        * 基本信息提交
        **/
-      infoSubmitForm(formName) {
-        this.$refs[formName].validate((valid) => {
+      async infoSubmitForm(formName) {
+        console.log(formName);
+         this.$refs[formName].validate(async (valid) => {
           if (valid) {
             console.log(this.infoForm);
-            this.next();
+            //this.next();
+            const url = API_DATA_URL + 'account/register';
+            const data = {"address": address};
+            try {
+              let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+              //console.log(res);
+              if (res.data.success && res.data.hasOwnProperty('result')) {
+                return {success: true, data: res.data.result}
+              } else {
+                return {success: false}
+              }
+            } catch (err) {
+              return {success: false, data: err}
+            }
+
+
+
+
+
           } else {
             return false;
           }
@@ -656,6 +733,10 @@
           }
           .el-switch {
             margin: -15px 0 0 0;
+          }
+          .btn-next{
+            width: 360px;
+            margin: 0 auto;
           }
         }
       }

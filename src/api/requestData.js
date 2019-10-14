@@ -1,4 +1,6 @@
+import axios from 'axios'
 import {post} from './https'
+import {API_DATA_URL} from '@/config'
 
 /**
  * 计算手续费
@@ -28,18 +30,24 @@ export function countCtxFee(tx, signatrueCount) {
  * @returns {Promise<any>}
  */
 export async function getAddressInfoByAddress(address) {
-  return await post('/', 'getAccount', [address])
-    .then((response) => {
-      //console.log(response);
-      if (response.hasOwnProperty("result")) {
-        return {success: true, data: response.result}
-      } else {
-        return {success: false, data: response}
-      }
-    })
-    .catch((error) => {
-      return {success: false, data: error};
-    });
+  let newAccountRegister = await accountRegister(address);
+  if (newAccountRegister.success) {
+    return await post('/', 'getAccount', [address])
+      .then((response) => {
+        //console.log(response);
+        if (response.hasOwnProperty("result")) {
+          return {success: true, data: response.result}
+        } else {
+          return {success: false, data: response}
+        }
+      })
+      .catch((error) => {
+        return {success: false, data: error};
+      });
+  } else {
+    console.log(newAccountRegister.data)
+  }
+
 }
 
 /**
@@ -62,6 +70,28 @@ export async function getBalanceOrNonceByAddress(address, assetId = 1) {
     .catch((error) => {
       return {success: false, data: error};
     });
+}
+
+/**
+ * @disc: 注册账户
+ * @params: address
+ * @date: 2019-10-14 11:38
+ * @author: Wave
+ */
+export async function accountRegister(address) {
+  const url = API_DATA_URL + 'account/register';
+  const data = {"address": address};
+  try {
+    let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+    //console.log(res);
+    if (res.data.success && res.data.hasOwnProperty('result')) {
+      return {success: true, data: res.data.result}
+    } else {
+      return {success: false}
+    }
+  } catch (err) {
+    return {success: false, data: err}
+  }
 }
 
 /**

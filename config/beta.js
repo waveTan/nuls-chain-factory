@@ -10,15 +10,17 @@ export const IS_DEV = process.env.NODE_ENV !== 'production';
 //运行环境（true:正式环境，false:测试环境）
 export const RUN_DEV = false;
 //链信息
-export const MAIN_INFO = {chainId:2,assetsId:1};
+export const MAIN_INFO = {chainId: 2, assetsId: 1};
 //链前缀
 export const API_PREFIX = 'tNULS';
-//正式、测试网络的api
-export let API_URL = IS_DEV ? 'https://beta.wallet.nuls.io/api':'https://beta.wallet.nuls.io/api';
+//网络数据api
+export let API_URL = IS_DEV ? 'https://beta.wallet.nuls.io/api' : 'https://beta.wallet.nuls.io/api';
+//接口数据api
+export let API_DATA_URL = IS_DEV ? 'http://192.168.1.160:8080/' : 'http://192.168.1.160:8080/';
 //请求最迟时间
 export const API_TIME = '8000';
 //浏览器连接地址
-export const EXPLORER_URL =IS_DEV ? 'http://beta.nulscan.io/':'https://beta.nulscan.io/';
+export const EXPLORER_URL = IS_DEV ? 'http://beta.nulscan.io/' : 'https://beta.nulscan.io/';
 
 //高级配置的默认值
 export const API_COFIG = {
@@ -29,7 +31,7 @@ export const API_COFIG = {
   "networkPort": 18001,//节点网络端口号，取值1-65535
   "magicNumber": 89898989,//网络魔法参数
   "inflationAmount": "500000000000000",//初始通胀金额
-  "totalInflationAmount":"5000000000000000", //默认资产最终通货总额
+  "totalInflationAmount": "5000000000000000", //默认资产最终通货总额
   "initTime": 1563951658, //通胀开始计算时间(单位:S)
   "deflationRatio": 100,//通缩比例(如果没有通缩则设为100，最大值100)
   "deflationTimeInterval": 31536000 //通缩间隔时间(单位：S)
