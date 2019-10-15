@@ -6,8 +6,8 @@
 
     <div class="w1200 mt_30 bg-white info">
 
-      <el-tabs tab-position="left">
-        <el-tab-pane label="业务场景">
+      <el-tabs tab-position="left" v-model="activeName" @tab-click="handleClick">
+        <el-tab-pane label="业务场景" name="first">
           <!--选择业务场景-->
           <div class="steps">
             <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''">
@@ -31,7 +31,7 @@
                 <li>社交应用</li>
               </ul>
             </div>
-            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" >
+            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''">
               <h6>POCM版</h6>
               <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
               <ul>
@@ -44,7 +44,7 @@
             <el-button type="success" class="btn-next" @click="stepsNext">确 定</el-button>
           </div>
         </el-tab-pane>
-        <el-tab-pane label="填写基本信息">
+        <el-tab-pane label="填写基本信息" name="second">
           <!--填写基本信息-->
           <el-row class="steps-info">
             <el-form :model="infoForm" :rules="infoRules" ref="infoForm" status-icon class="steps-infoForm"
@@ -56,7 +56,7 @@
               <el-form-item label="链Logo" prop="logoUrl">
                 <UploadBar @func="getMsgFormSon"></UploadBar>
               </el-form-item>
-              <el-form-item label="地址前缀" prop="precision">
+              <el-form-item label="地址前缀" prop="prefix">
                 <el-input v-model="infoForm.prefix"></el-input>
               </el-form-item>
               <el-form-item label="通证简称" prop="symbol">
@@ -65,11 +65,15 @@
               <el-form-item label="发行总量" prop="total">
                 <el-input v-model="infoForm.total"></el-input>
               </el-form-item>
-              <el-form-item label="精度" prop="precision">
-                <el-input v-model="infoForm.precision"></el-input>
+              <el-form-item label="精度" prop="decimals">
+                <el-input v-model="infoForm.decimals"></el-input>
               </el-form-item>
-              <el-form-item label="通胀金额" prop="amount">
+              <el-form-item label="单次通胀金额" prop="amount">
                 <el-input v-model="infoForm.amount" placeholder="初始通胀金额">
+                </el-input>
+              </el-form-item>
+              <el-form-item label="总通胀金额" prop="totalAmount">
+                <el-input v-model="infoForm.totalAmount" placeholder="初始通胀金额">
                 </el-input>
               </el-form-item>
               <el-form-item label="开始时间" prop="startTime">
@@ -93,12 +97,12 @@
                 <el-input type="textarea" :rows="5" v-model="infoForm.desc"></el-input>
               </el-form-item>
               <el-form-item class="tc">
-                <el-button type="primary" class="btn-next" @click="infoSubmitForm(infoForm)">确 定</el-button>
+                <el-button type="primary" class="btn-next" @click="infoSubmitForm('infoForm')">确 定</el-button>
               </el-form-item>
             </el-form>
           </el-row>
         </el-tab-pane>
-        <el-tab-pane label="配置创世块">
+        <el-tab-pane label="配置创世块" name="third">
           <!--配置创世块-->
           <el-row class="steps-node">
             <el-form :model="nodeForm" ref="nodeForm" class="steps-nodeForm">
@@ -112,11 +116,13 @@
               </span>
                 </div>
                 <div class="node-form cb">
-                  <el-form-item label="通证数量" prop="pass" class="number fl">
-                    <el-input v-model.number="domain.number" type="number"></el-input>
+                  <el-form-item label="通证数量" class="number fl">
+                    <el-input v-model.number="domain.coins" @change="changeNumber"></el-input>
                   </el-form-item>
-                  <el-form-item label="锁定时间" prop="pass" class="time fr">
-                    <el-date-picker v-model="domain.time" type="datetime" placeholder="选择日期时间" default-time="12:00:00">
+                  <el-form-item label="锁定时间" class="time fr">
+                    <el-date-picker v-model="domain.lockTime" type="datetime" placeholder="选择日期时间"
+                                    default-time="12:00:00"
+                                    @change="changeTime">
                     </el-date-picker>
                   </el-form-item>
                 </div>
@@ -126,27 +132,28 @@
                   <el-button type="success" @click="nodeSubmitForm('nodeForm')">备份地址私钥</el-button>
                 </div>
                 <div class="btn">
-                  <el-button @click="nodeNext">下一步</el-button>
+                  <el-button @click="submintNodeInfo" :disabled="!isBackup">提交创世块信息
+                  </el-button>
                 </div>
               </el-form-item>
             </el-form>
 
-            <el-dialog title="备份地址私钥列" :visible.sync="backupsDialog" width="80%" class="backups-dialog">
-              <el-table :data="addressKeyData" border>
-                <el-table-column type="index" label="序号" width="50">
-                </el-table-column>
-                <el-table-column property="address" label="地址" width="400">
-                </el-table-column>
-                <el-table-column property="pri" label="私钥" min-width="300">
-                </el-table-column>
-              </el-table>
-              <!--<el-button type="success" class="btn-next">复制</el-button>-->
+            <el-dialog title="备份地址私钥列" width="40rem" class="backups-dialog"
+                       :visible.sync="backupsDialog"
+                       :close-on-click-modal="false"
+                       :close-on-press-escape="false"
+                       :show-close="false"
+            >
+              <h5 class="font16 mt_20 mb_20">请务必保存好创世块地址私钥，否则将面临丢失资产的风险。资产丢失后，NULS也无法帮你找回</h5>
+              <div class="tc">
+                <el-button @click="backupsNodeList" type="success">下载地址私钥TXT</el-button>
+              </div>
             </el-dialog>
 
           </el-row>
         </el-tab-pane>
-        <el-tab-pane label="设置跨链">
-          <!--设置跨链-->
+        <el-tab-pane label="链信息" name="fourth">
+          <!--链信息-->
           <el-row class="steps-set">
             <el-col class="tc radio">
               <el-radio v-model="isPartake" label="0">参与跨链</el-radio>
@@ -154,18 +161,42 @@
             </el-col>
             <div class="tc tips font16">
               <p v-show="isPartake ==='0'">需缴纳跨链抵押金: <span class="yellow">20000</span> <font class="fCN">NULS</font></p>
-              <p v-show="isPartake ==='1'">不参与跨链，无需缴纳跨链抵押金</p>
+            </div>
+            <div class="seed cb w630">
+              <el-form :model="seedForm" ref="seedForm">
+                <el-col class="seed_list bg-gray" v-for="(domain, index) in seedForm.seedList" :key="index">
+                  <div class="node-address">
+                    <p>地址{{index}}:{{domain.address}}</p>
+                    <span>
+                <i class="el-icon-circle-plus-outline click" @click="addSeedDomain"></i>
+                <i class="el-icon-remove-outline click" @click.prevent="removeSeedDomain(domain)"
+                   v-show="seedForm.seedList.length !==1 "></i>
+              </span>
+                  </div>
+                  <div class="node-form cb">
+                    <el-form-item label="种子节点IP" class="number fl">
+                      <el-input v-model="domain.IP"></el-input>
+                    </el-form-item>
+                  </div>
+                </el-col>
+              </el-form>
+              <div class="seed_backups">
+                <el-button @click="backupsSeedList" type="success">下载共识节点出块地址私钥</el-button>
+              </div>
             </div>
             <div class="btn-next tc">
-              <div class="balance">
+              <!--<div class="balance">
                 当前账户余额: {{accountInfo.balance}} <span class="fCN">NULS</span>
-              </div>
+              </div>-->
               <div class="btn">
-                <el-button type="success" @click="next">下一步</el-button>
+                <el-button type="success" @click="submintChainInfo" :disabled="!isSeedBackup">提交链信息</el-button>
               </div>
             </div>
 
           </el-row>
+        </el-tab-pane>
+        <el-tab-pane label="确认订单" name="five">
+          确订单
         </el-tab-pane>
       </el-tabs>
       <!--确认订单-->
@@ -261,7 +292,8 @@
 <script>
   import nuls from 'nuls-sdk-js'
   import axios from 'axios'
-  import {MAIN_INFO, API_COFIG, API_DATA_URL} from '@/config'
+  import {API_COFIG, API_DATA_URL} from '@/config'
+  import {timesDecimals, divisionDecimals, switchMsec} from '@/api/util'
   import UploadBar from '@/components/UploadBar';
 
   export default {
@@ -304,7 +336,7 @@
           callback();
         }
       };
-      let validatePrecision = (rule, value, callback) => {
+      let validateDecimals = (rule, value, callback) => {
         if (!value) {
           return callback(new Error('请输入精度系数'));
         } else {
@@ -314,6 +346,13 @@
       let validateAmount = (rule, value, callback) => {
         if (!value) {
           return callback(new Error('请输入通货膨胀金额'));
+        } else {
+          callback();
+        }
+      };
+      let validateTotalAmount = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入总通货膨胀金额'));
         } else {
           callback();
         }
@@ -339,10 +378,17 @@
           callback();
         }
       };
+      let validateSeedNumber = (rule, value, callback) => {
+        if (!value) {
+          return callback(new Error('请输入种子节点数量'));
+        } else {
+          callback();
+        }
+      };
 
       return {
         accountInfo: localStorage.hasOwnProperty('accountInfo') ? JSON.parse(localStorage.getItem('accountInfo')) : {},//地址信息
-
+        activeName: 'fourth',
         stepsActive: 0,//步骤条
         isSteps: 1,//业务场景选中模块
 
@@ -352,12 +398,13 @@
           logoUrl: 'http://zlj-1.oss-cn-hangzhou.aliyuncs.com/1565085680556.png',
           prefix: 'wave',
           symbol: 'wave',
-          total: '88888',
-          precision: '5',
-          amount: 5000000000,
-          startTime: '2019-08-23 00:00:00',
-          proportion: '10',
-          intervalTime: '365',
+          total: 8000,
+          decimals: 5,
+          amount: 500,
+          totalAmount: 5000,
+          startTime: '2019-11-23 00:00:00',
+          proportion: 10,
+          intervalTime: 100,
           senior: false,
           desc: JSON.stringify(API_COFIG),
         },
@@ -377,11 +424,14 @@
           total: [
             {validator: validateTotal, trigger: 'blur'},
           ],
-          precision: [
-            {validator: validatePrecision, trigger: 'blur'},
+          decimals: [
+            {validator: validateDecimals, trigger: 'blur'},
           ],
           amount: [
             {validator: validateAmount, trigger: 'blur'},
+          ],
+          totalAmount: [
+            {validator: validateTotalAmount, trigger: 'blur'},
           ],
           intervalTime: [
             {validator: validateIntervalTime, trigger: 'blur'},
@@ -396,27 +446,22 @@
 
         //创世块表单
         nodeForm: {
-          addressList: [
-            {
-              address: "tNULSeBaMvN1zdsRJY96pLtFkke5YJV9fzJNXR",
-              key: 1565085784984,
-              number: 55555,
-              pri: "4c4853ef46900f77db5b0af41e16ed408f26c9f4611356bce2b81aebfbe6e0ba",
-              time: 1567828800000
-            },
-            {
-              address: "tNULSeBaMgKuMz7VMGftERR6UDSDDwcsaJZesT",
-              key: 1565085795453,
-              number: 33333,
-              pri: "0b7c56e6e4a1400dcdc639f3be4f1cf7cf5fc7004dfe151bd3d6b30ebe1d0bd9",
-              time: 1566446400000
-            }
-          ],
+          addressList: [],
         },
         backupsDialog: false,
         addressKeyData: [],
+        isBackup: false,//是否已经备份
 
         isPartake: '0', //设置跨链模式 0:参与跨链 1:不参与跨链
+        seedForm: {
+          seedList: [],
+        },
+        seedRules: {
+          seedNumber: [
+            {validator: validateSeedNumber, trigger: 'blur'}
+          ],
+        },
+        isSeedBackup: false,//种子节点是否备份
 
         isApply: '0', //节点申请方式 0:云节点 1:自行部署
         applyForm: {
@@ -436,7 +481,7 @@
     watch: {},
     created() {
       this.getAccount(this.accountInfo.address);
-      //this.addDomain();
+      this.addSeedDomain();
     },
     mounted() {
       localStorage.getItem('accountInfo');
@@ -444,11 +489,18 @@
     methods: {
 
       /**
-       * 选择业务类型
-       * @param type
-       **/
-      changeSteps(type) {
-        this.isSteps = type;
+       * @disc: tab选项
+       * @date: 2019-10-15 13:41
+       * @author: Wave
+       */
+      handleClick(tab) {
+        if (tab.name === 'third') {
+          if (this.nodeForm.addressList.length === 0) {
+            this.addDomain();
+          }
+        } else if (tab.name === 'fourth') {
+          this.addSeedDomain();
+        }
       },
 
       /**
@@ -494,6 +546,26 @@
         try {
           let res = await axios.post(url);
           console.log(res.data);
+          if (res.data.success) {
+            this.infoForm.name = res.data.result.chainName;
+            this.infoForm.logoUrl = res.data.result.logo;
+            this.infoForm.prefix = res.data.result.prefix;
+            this.infoForm.chainId = res.data.result.chainId;
+            let newAssetInfo = res.data.result.assetInfo;
+            this.infoForm.symbol = newAssetInfo.symbol;
+            this.infoForm.total = divisionDecimals(newAssetInfo.initCoins, newAssetInfo.decimals);
+            this.infoForm.decimals = newAssetInfo.decimals;
+
+            this.nodeForm.addressList = JSON.parse(res.data.result.genesisInfo);
+
+            let newConfigInfo = JSON.parse(res.data.result.configInfo);
+            this.infoForm.amount = divisionDecimals(newConfigInfo.inflationAmount, newAssetInfo.decimals);
+            this.infoForm.totalAmount = divisionDecimals(newConfigInfo.totalInflationAmount, newAssetInfo.decimals);
+            this.infoForm.startTime = newConfigInfo.initTime;
+            this.infoForm.proportion = newConfigInfo.deflationRatio;
+            this.infoForm.intervalTime = newConfigInfo.deflationTimeInterval / 86400;
+            this.infoForm.desc = res.data.result.configInfo;
+          }
         } catch (err) {
           console.log(err);
         }
@@ -503,44 +575,50 @@
        * 基本信息提交
        **/
       async infoSubmitForm(formName) {
-        console.log(formName);
-         this.$refs[formName].validate(async (valid) => {
+        this.$refs[formName].validate(async (valid) => {
           if (valid) {
             console.log(this.infoForm);
             //this.next();
-            const url = API_DATA_URL + 'account/register';
-            const data = {"address": address};
+            const url = API_DATA_URL + 'chain/info/base/save';
+            const data = {
+              "chainId": this.infoForm.chainId,
+              "address": this.accountInfo.address,
+              "chainName": this.infoForm.name,
+              "type": this.isSteps,
+              "prefix": this.infoForm.prefix,
+              "logo": this.infoForm.logoUrl,
+              "payTimes": 0,
+              "nodeCount": 0,
+              "payAmount": 0,
+              "asset": {
+                "assetName": this.infoForm.name,
+                "symbol": this.infoForm.symbol,
+                "initCoins": timesDecimals(this.infoForm.total, this.infoForm.decimals),
+                "decimals": this.infoForm.decimals
+              },
+              "config": {
+                "packingInterval": 10,
+                "nodeMaxIn": 20,
+                "nodeMaxOut": 50,
+                "syncBlockCount": 10,
+                "networkPort": 18001,
+                "magicNumber": 89898989,
+                "inflationAmount": timesDecimals(this.infoForm.amount, this.infoForm.decimals),
+                "totalInflationAmount": timesDecimals(this.infoForm.totalAmount, this.infoForm.decimals),
+                "initTime": switchMsec(this.infoForm.startTime) / 1000, //时间挫
+                "deflationRatio": this.infoForm.proportion,
+                "deflationTimeInterval": this.infoForm.intervalTime * 86400 //时间:秒
+              }
+            };
+            console.log(data);
             try {
               let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
-              //console.log(res);
-              if (res.data.success && res.data.hasOwnProperty('result')) {
-                return {success: true, data: res.data.result}
-              } else {
-                return {success: false}
-              }
+              console.log(res);
             } catch (err) {
               return {success: false, data: err}
             }
 
 
-
-
-
-          } else {
-            return false;
-          }
-        });
-      },
-
-      /**
-       * 经济模型提交
-       **/
-      inflationSubmitForm(formName) {
-        this.$refs[formName].validate((valid) => {
-          if (valid) {
-            console.log(this.inflationForm);
-            this.next();
-            this.addDomain();
           } else {
             return false;
           }
@@ -567,55 +645,138 @@
 
       //添加创世块
       addDomain() {
-        let newAddressInfo = nuls.newAddress(MAIN_INFO.chainId, '');
+        let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix);
         this.nodeForm.addressList.push(
-          {address: newAddressInfo.address, number: '', time: '', pri: newAddressInfo.pri, key: Date.now()}
+          {
+            address: newAddressInfo.address,
+            coins: '',
+            lockTime: Date.now() + 10 * 86400000,
+            pri: newAddressInfo.pri,
+          }
         );
       },
 
       /**
-       * 创世块下一步
-       **/
-      nodeNext() {
-        let newNodeList = this.nodeForm.addressList;
-        let nuData = newNodeList.filter((v) => {
-          return v.number === ''
-        });
-        let timeData = newNodeList.filter((v) => {
-          return v.time === '' || !v.time
-        });
-        if (nuData.length === 0 && timeData.length === 0) {
-          for (let item of this.nodeForm.addressList) {
-            item.time = new Date(item.time).getTime()
-          }
-          console.log(nuData);
-          this.next()
-        } else {
-          this.$message({message: "有未填写参数 ", type: 'error', duration: 2000});
+       * @disc: 数值改变创世块
+       * @date: 2019-10-15 13:52
+       * @author: Wave
+       */
+      changeNumber(e) {
+        console.log(e);
+        console.log(this.nodeForm.addressList);
+      },
+
+      /**
+       * @disc: 时间改变创世块
+       * @date: 2019-10-15 14:09
+       * @author: Wave
+       */
+      changeTime(e) {
+        console.log(e);
+        console.log(this.nodeForm.addressList);
+      },
+
+      /**
+       * @disc: 备份创世块私钥创
+       * @params:
+       * @date: 2019-10-15 14:13
+       * @author: Wave
+       */
+      backupsNodeList() {
+        //let newKeyList = this.addressKeyData.splice(this.addressKeyData.findIndex(item => item.key === data.key), 1);
+        let newKeyList = [];
+        for (let item of this.addressKeyData) {
+          let {key, ...personUnknowKey} = item;
+          newKeyList.push(personUnknowKey);
+        }
+        let FileSaver = require('file-saver');
+        let blob = new Blob([JSON.stringify(newKeyList)], {type: "text/plain;charset=utf-8"});
+        FileSaver.saveAs(blob, "GenesisAddressList.txt");
+        this.backupsDialog = false;
+        this.isBackup = true;
+      },
+
+      /**
+       * @disc:  提交创世块信息
+       * @params:
+       * @date: 2019-10-15 10:47
+       * @author: Wave
+       */
+      async submintNodeInfo() {
+        const url = API_DATA_URL + '/chain/info/genesis/save';
+        let newNodeList = [];
+        for (let item of this.nodeForm.addressList) {
+          let {pri, key, ...personUnknowPri} = item;
+          newNodeList.push(personUnknowPri);
+        }
+        const data = {
+          "chainId": this.infoForm.chainId,
+          "address": this.accountInfo.address,
+          "genesisInfo": newNodeList
+        };
+        try {
+          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          console.log(res.data);
+        } catch (err) {
+          console.log(err)
         }
       },
 
-      /**
-       * 申请节点提交
-       * @param formName
-       * */
-      applySubmitForm(formName) {
-        console.log(formName);
-        this.$refs[formName].validate((valid) => {
-          if (valid) {
-            this.next();
-          } else {
-            this.next();
-            return false;
+      //移除种子节点
+      removeSeedDomain(item) {
+        let index = this.seedForm.seedList.indexOf(item);
+        if (index !== -1) {
+          this.seedForm.seedList.splice(index, 1)
+        }
+      },
+
+      //添加种子节点
+      addSeedDomain() {
+        let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix);
+        console.log(this.seedForm);
+        this.seedForm.seedList.push(
+          {
+            address: newAddressInfo.address,
+            IP: "127.0.0.1",
           }
-        });
+        );
       },
 
       /**
-       * 下一步方法
-       **/
-      next() {
-        this.stepsActive = this.stepsActive + 1;
+       * @disc: 备份种子节点私钥
+       * @date: 2019-10-15 16:59
+       * @author: Wave
+       */
+      backupsSeedList() {
+        let FileSaver = require('file-saver');
+        let blob = new Blob([JSON.stringify(this.seedForm.seedList)], {type: "text/plain;charset=utf-8"});
+        FileSaver.saveAs(blob, "SeedAddressList.txt");
+        this.isSeedBackup = true;
+      },
+
+      /**
+       * @disc: 提交链信息
+       * @date: 2019-10-15 17:14
+       * @author: Wave
+       */
+      async submintChainInfo() {
+        const url = API_DATA_URL + '/chain/info/consensus/save';
+        let newSeedList = [];
+        for (let item of this.seedForm.seedList) {
+          let {pri, ...personUnknowPri} = item;
+          newSeedList.push(personUnknowPri);
+        }
+        const data = {
+          "chainId": this.infoForm.chainId,
+          "address": this.accountInfo.address,
+          "seeds": newSeedList
+        };
+        try {
+          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          console.log(res.data);
+        } catch (err) {
+          console.log(err)
+        }
       },
 
       /**
@@ -734,7 +895,7 @@
           .el-switch {
             margin: -15px 0 0 0;
           }
-          .btn-next{
+          .btn-next {
             width: 360px;
             margin: 0 auto;
           }
@@ -793,7 +954,7 @@
               .number {
               }
               .time {
-                margin: 0 20px 0 0;
+                margin: -15px 20px 0 0;
                 .el-form-item__label {
                   float: none;
                 }
@@ -826,8 +987,15 @@
           .el-dialog__body {
             background-color: #FFFFFF !important;
             padding: 20px 30px 50px !important;
-            .el-table {
-
+            h5 {
+              line-height: 28px;
+            }
+            .tc {
+              .el-button--success {
+                span {
+                  color: #ffffff;
+                }
+              }
             }
           }
         }
@@ -844,10 +1012,49 @@
             font-weight: bold;
           }
         }
+        .seed {
+          margin: 0 auto;
+          .el-form{
+            width: 100%;
+            .seed_list {
+              .node-address {
+                line-height: 50px;
+                p {
+                  font-size: 16px;
+                  color: #17202e;
+                  float: left;
+                  margin: 0 0 0 20px;
+                }
+                span {
+                  float: right;
+                  margin: 0 10px 0 0;
+                  i {
+                    font-size: 26px;
+                    color: #608FFF;
+                  }
+                }
+              }
+              .node-form{
+                width: 100%;
+                .number{
+                  width: 460px;
+                  margin: 0 0 30px 20px;
+                }
+              }
+            }
+          }
+          .seed_backups{
+            width: 320px;
+            margin: 20px auto;
+            .el-button{
+              width: 320px;
+            }
+          }
+        }
         .btn-next {
           .balance {
             font-size: 16px;
-            line-height: 40px;
+            position: inherit;
           }
           .btn {
             text-align: center;

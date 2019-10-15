@@ -79,6 +79,17 @@ export function timesDecimals(nu, decimals = 8) {
 }
 
 /**
+ * @disc: 日期转换成时间搓
+ * @params: time
+ * @date: 2019-10-15 11:41
+ * @author: Wave
+ */
+export  function switchMsec (time){ // 日期转换成毫秒
+  let date = new Date(time);
+  return Date.parse(date);
+}
+
+/**
  * 复制 copy
  * @param value
  */
