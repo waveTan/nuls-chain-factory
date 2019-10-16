@@ -1,16 +1,19 @@
 <template>
   <div class="build bg-gray">
+
     <div class="bg-white top">
-      <h3 class="title tc">搭建区块链</h3>
+      <h3 class="title tc" v-if="packingState ===0">搭建区块链</h3>
+      <h3 class="title tc" v-else-if="packingState ===1 || packingState ===3">链工厂正在按照你的配置生产区块链，请稍等</h3>
+      <h3 class="title tc" v-else-if="packingState ===2">链信息提交审核失败</h3>
+      <h3 class="title tc" v-else-if="packingState ===4">打包失败</h3>
+      <h3 class="title tc" v-else-if="packingState ===5">区块链搭建完成</h3>
     </div>
-
-    <div class="w1200 mt_30 bg-white info">
-
+    <div class="w1200 mt_30 bg-white info" v-if="packingState ===0">
       <el-tabs tab-position="left" v-model="activeName" @tab-click="handleClick">
         <el-tab-pane label="业务场景" name="first">
           <!--选择业务场景-->
           <div class="steps">
-            <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''">
+            <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''" @click="choiceSteps(1)">
               <h6>分布式账本版</h6>
               <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改</p>
               <ul>
@@ -21,7 +24,7 @@
                 <li>发票</li>
               </ul>
             </div>
-            <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''">
+            <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''" @click="choiceSteps(2)">
               <h6>智能合约版</h6>
               <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
               <ul>
@@ -31,7 +34,7 @@
                 <li>社交应用</li>
               </ul>
             </div>
-            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''">
+            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" @click="choiceSteps(3)">
               <h6>POCM版</h6>
               <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
               <ul>
@@ -41,7 +44,7 @@
                 <li>社交应用</li>
               </ul>
             </div>
-            <el-button type="success" class="btn-next" @click="stepsNext">确 定</el-button>
+            <el-button type="success" class="btn-next" @click="submitSteps">提交业务场景</el-button>
           </div>
         </el-tab-pane>
         <el-tab-pane label="填写基本信息" name="second">
@@ -54,7 +57,7 @@
                 </el-input>
               </el-form-item>
               <el-form-item label="链Logo" prop="logoUrl">
-                <UploadBar @func="getMsgFormSon"></UploadBar>
+                <UploadBar :imgUrl="infoForm.logoUrl" @func="getMsgFormSon"></UploadBar>
               </el-form-item>
               <el-form-item label="地址前缀" prop="prefix">
                 <el-input v-model="infoForm.prefix"></el-input>
@@ -97,7 +100,7 @@
                 <el-input type="textarea" :rows="5" v-model="infoForm.desc"></el-input>
               </el-form-item>
               <el-form-item class="tc">
-                <el-button type="primary" class="btn-next" @click="infoSubmitForm('infoForm')">确 定</el-button>
+                <el-button type="primary" class="btn-next" @click="infoSubmitForm('infoForm')">提交基本信息</el-button>
               </el-form-item>
             </el-form>
           </el-row>
@@ -117,12 +120,11 @@
                 </div>
                 <div class="node-form cb">
                   <el-form-item label="通证数量" class="number fl">
-                    <el-input v-model.number="domain.coins" @change="changeNumber"></el-input>
+                    <el-input type="number" v-model.number="domain.coins"></el-input>
                   </el-form-item>
                   <el-form-item label="锁定时间" class="time fr">
                     <el-date-picker v-model="domain.lockTime" type="datetime" placeholder="选择日期时间"
-                                    default-time="12:00:00"
-                                    @change="changeTime">
+                                    default-time="12:00:00">
                     </el-date-picker>
                   </el-form-item>
                 </div>
@@ -156,11 +158,11 @@
           <!--链信息-->
           <el-row class="steps-set">
             <el-col class="tc radio">
-              <el-radio v-model="isPartake" label="0">参与跨链</el-radio>
-              <el-radio v-model="isPartake" label="1">不参与跨链</el-radio>
+              <el-radio v-model="isPartake" label='1'>参与跨链</el-radio>
+              <el-radio v-model="isPartake" label='0'>不参与跨链</el-radio>
             </el-col>
             <div class="tc tips font16">
-              <p v-show="isPartake ==='0'">需缴纳跨链抵押金: <span class="yellow">20000</span> <font class="fCN">NULS</font></p>
+              <p v-show="isPartake ==='1'">需缴纳跨链抵押金: <span class="yellow">20000</span> <font class="fCN">NULS</font></p>
             </div>
             <div class="seed cb w630">
               <el-form :model="seedForm" ref="seedForm">
@@ -175,7 +177,7 @@
                   </div>
                   <div class="node-form cb">
                     <el-form-item label="种子节点IP" class="number fl">
-                      <el-input v-model="domain.IP"></el-input>
+                      <el-input v-model="domain.ip"></el-input>
                     </el-form-item>
                   </div>
                 </el-col>
@@ -196,84 +198,125 @@
           </el-row>
         </el-tab-pane>
         <el-tab-pane label="确认订单" name="five">
-          确订单
+          <!--确认订单-->
+          <div class="steps-confirm">
+            <div class="w700">
+              <div class="title bg-gray">业务场景</div>
+              <div class="infos">
+                <p v-show="isSteps === 1">智能合约版</p>
+                <p v-show="isSteps === 2">智能合约版</p>
+                <p v-show="isSteps === 3">智能合约版</p>
+              </div>
+              <div class="title bg-gray">基本信息</div>
+              <div class="infos">
+                <p class="logo cb">
+                  <span class="fl">Logo</span>
+                  <font class="fl"><img :src="infoForm.logoUrl"/></font>
+                </p>
+                <p class="cb"><span class="fl">链名称</span><font class="fl">{{infoForm.name}}</font></p>
+                <p class="cb"><span class="fl">地址前缀</span><font class="fl">{{infoForm.prefix}}</font></p>
+                <p class="cb"><span class="fl">通证名称</span><font class="fl">{{infoForm.symbol}}</font></p>
+                <p class="cb"><span class="fl">精度</span><font class="fl">{{infoForm.decimals}}</font></p>
+                <p class="cb"><span class="fl">总发行量</span><font class="fl">{{infoForm.total}}</font></p>
+              </div>
+
+              <div class="title bg-gray">创世块</div>
+              <div class="infos node-infos">
+                <ul>
+                  <li class="titles">
+                    <span class="fl">地址</span>
+                    <font class="fl">分配数量</font>
+                  </li>
+                  <li v-for="(domain, index) in nodeForm.addressList" :key="index">
+                    <span class="fl">{{domain.address}}</span>
+                    <font class="fl">{{domain.coins}}</font>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="title bg-gray cb">链信息</div>
+              <div class="infos">
+                <p class="cb"><span class="fl">是否跨链</span><font class="fl">{{isPartake=== '1' ? '是':'否' }}</font></p>
+                <p class="cb"><span class="fl">抵押金</span><font class="fl">{{isPartake=== '1' ? '20000':'0' }} <font
+                        class="fCN">NULS</font></font></p>
+              </div>
+
+              <div class="title bg-gray">种子节点</div>
+              <div class="infos node-infos">
+                <ul>
+                  <li class="titles">
+                    <span class="fl">地址</span>
+                    <font class="fl">IP</font>
+                  </li>
+                  <li v-for="(domain, index) in seedForm.seedList" :key="index">
+                    <span class="fl">{{domain.address}}</span>
+                    <font class="fl">{{domain.ip}}</font>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="title bg-gray" v-show="false">节点</div>
+              <div class="infos" v-show="false">
+                <p class="cb"><span class="fl">模式</span><font class="fl"> {{isApply=== '0' ? '云节点运行':'自行部署' }}</font>
+                </p>
+                <div v-show="isApply=== '0'">
+                  <p class="cb"><span class="fl">运行时间</span><font class="fl">{{applyForm.runTime}}个月</font></p>
+                  <p class="cb"><span class="fl">共识节点</span><font class="fl">{{applyForm.node}}个</font></p>
+                  <p class="cb"><span class="fl">费用</span><font class="fl">{{applyForm.netFee}} <font
+                          class="fCN">NULS</font></font></p>
+                </div>
+
+              </div>
+            </div>
+          </div>
         </el-tab-pane>
       </el-tabs>
-      <!--确认订单-->
-      <div class="steps-confirm" v-show="stepsActive ===5">
-        <div class="w700">
-          <div class="title bg-gray">业务场景</div>
-          <div class="infos">
-            <p v-show="isSteps === 1">智能合约版</p>
-            <p v-show="isSteps === 2">智能合约版</p>
-            <p v-show="isSteps === 3">智能合约版</p>
-          </div>
-          <div class="title bg-gray">基本信息</div>
-          <div class="infos">
-            <p class="logo cb">
-              <span class="fl">Logo</span>
-              <font class="fl"><img :src="infoForm.logoUrl"/></font>
-            </p>
-            <p class="cb"><span class="fl">链名称</span><font class="fl">{{infoForm.name}}</font></p>
-            <p class="cb"><span class="fl">地址前缀</span><font class="fl">{{infoForm.prefix}}</font></p>
-            <p class="cb"><span class="fl">通证名称</span><font class="fl">{{infoForm.symbol}}</font></p>
-            <p class="cb"><span class="fl">进度</span><font class="fl">{{infoForm.precision}}</font></p>
-            <p class="cb"><span class="fl">总发行量</span><font class="fl">{{infoForm.total}}</font></p>
-          </div>
-
-          <div class="title bg-gray">创世块</div>
-          <div class="infos node-infos">
-            <ul>
-              <li class="titles">
-                <span class="fl">地址</span>
-                <font class="fl">分配数量</font>
-              </li>
-              <li v-for="item of nodeForm.addressList" :key="item.key">
-                <span class="fl">{{item.address}}</span>
-                <font class="fl">{{item.number}}</font>
-              </li>
-            </ul>
-          </div>
-
-          <div class="title bg-gray cb">跨链</div>
-          <div class="infos">
-            <p class="cb"><span class="fl">是否跨链</span><font class="fl">{{isPartake=== '0' ? '是':'否' }}</font></p>
-            <p class="cb"><span class="fl">抵押金</span><font class="fl">{{isPartake=== '0' ? '20000':'0' }} <font
-                    class="fCN">NULS</font></font></p>
-          </div>
-          <div class="title bg-gray">节点</div>
-          <div class="infos">
-            <p class="cb"><span class="fl">模式</span><font class="fl"> {{isApply=== '0' ? '云节点运行':'自行部署' }}</font></p>
-            <div v-show="isApply=== '0'">
-              <p class="cb"><span class="fl">运行时间</span><font class="fl">{{applyForm.runTime}}个月</font></p>
-              <p class="cb"><span class="fl">共识节点</span><font class="fl">{{applyForm.node}}个</font></p>
-              <p class="cb"><span class="fl">费用</span><font class="fl">{{applyForm.netFee}} <font
-                      class="fCN">NULS</font></font></p>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
     </div>
 
-    <div class="w1200 bg-white bottoms cb" v-show="stepsActive ===5">
+    <div class="packing bg-white" v-else>
+      <div class="tc" v-show="packingState !==5">
+        <img src="./../../assets/img/packing.png"/>
+      </div>
+      <div class="font16 tc" v-show="packingState ===3">
+        链打包中...<i class="el-icon-loading"></i>
+      </div>
+      <ul class="w1200">
+        <li class="bg-gray">
+          <h6><img src="./../../assets/img/client.png"/></h6>
+          <p>可通过该客户端创建共识节点，维护网络XXX的区块链网络</p>
+          <el-button type="success" class="btn-next" @click="download(downloadList.walletProUrl)">下 载</el-button>
+        </li>
+        <li class="bg-gray" v-show="false">
+          <h6><img src="./../../assets/img/wallet.png"/></h6>
+          <p>可通过轻钱包连接本地或网络中可信任节点客户端，进行资产的转入转出等操作</p>
+          <el-button type="success" class="btn-next" @click="download(downloadList.walletUrl)">下 载</el-button>
+        </li>
+        <li class="bg-gray" >
+          <h6><img src="./../../assets/img/browser.png"/></h6>
+          <p>可通过该浏览器查看XXX网络中的账户，交易等信息</p>
+          <el-button type="success" class="btn-next" @click="download(downloadList.walletUrl)">下 载</el-button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="w1200 bg-white bottoms cb" v-show="activeName ==='five'">
       <div class="b-left fl">
         <div class="fl total">
-          <p>总费用: <span class="yellow">56464</span><font class="fCN">&nbsp;NULS</font></p>
+          <p>总费用: <span class="yellow">{{200 + Number(isPartake)*20000}}</span><font class="fCN">&nbsp;NULS</font></p>
         </div>
         <el-popover placement="top" width="320" trigger="click" class="popover">
           <div class="detailed">
             <h6 class="bg-gray">账单明细</h6>
-            <p class="cb"><u class="fl gray">创建基本信息</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
+            <p class="cb"><u class="fl gray">创建基本信息</u><span class="fl">200</span><font class="fCN">&nbsp;NULS</font>
             </p>
-            <p class="cb"><u class="fl gray">跨链抵押</u><span class="fl">{{isPartake=== '0' ? '20000':'0' }} </span><font
+            <p class="cb"><u class="fl gray">跨链抵押</u><span class="fl">{{isPartake==='1' ? '20000':'0' }} </span><font
                     class="fCN">&nbsp;NULS</font></p>
-            <p class="cb"><u class="fl gray">运行3个种子节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
+            <!--<p class="cb"><u class="fl gray">运行3个种子节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
             </p>
             <p class="cb"><u class="fl gray">运行5个共识节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
-            </p>
-            <p class="cb all"><u class="fl gray">总计</u><span class="yellow fl">0.01</span><font
+            </p>-->
+            <p class="cb all"><u class="fl gray">总计</u><span
+                    class="yellow fl">{{200 + Number(isPartake)*20000}}</span><font
                     class="fCN">&nbsp;NULS</font></p>
           </div>
           <el-link :underline="false" type="primary" slot="reference">明细</el-link>
@@ -281,10 +324,11 @@
 
       </div>
       <div class="b-right fr">
-        <el-button>上一步</el-button>
-        <el-button type="success">确认订单</el-button>
+        <el-button type="success" @click="confirm">确认订单</el-button>
       </div>
     </div>
+    <Password ref="password" @passwordSubmit="passSubmit">
+    </Password>
   </div>
 
 </template>
@@ -292,9 +336,11 @@
 <script>
   import nuls from 'nuls-sdk-js'
   import axios from 'axios'
-  import {API_COFIG, API_DATA_URL} from '@/config'
-  import {timesDecimals, divisionDecimals, switchMsec} from '@/api/util'
+  import {MAIN_INFO, API_COFIG, API_DATA_URL} from '@/config'
+  import {timesDecimals, divisionDecimals, switchMsec, passwordVerification} from '@/api/util'
+  import {transferTransaction, validateAndBroadcast} from '@/api/requestData'
   import UploadBar from '@/components/UploadBar';
+  import Password from '@/components/PasswordBar'
 
   export default {
     data() {
@@ -388,8 +434,7 @@
 
       return {
         accountInfo: localStorage.hasOwnProperty('accountInfo') ? JSON.parse(localStorage.getItem('accountInfo')) : {},//地址信息
-        activeName: 'fourth',
-        stepsActive: 0,//步骤条
+        activeName: 'first',
         isSteps: 1,//业务场景选中模块
 
         //基本信息表单
@@ -452,7 +497,7 @@
         addressKeyData: [],
         isBackup: false,//是否已经备份
 
-        isPartake: '0', //设置跨链模式 0:参与跨链 1:不参与跨链
+        isPartake: '0', //设置跨链模式 0:不参与跨链 1:参与跨链
         seedForm: {
           seedList: [],
         },
@@ -462,6 +507,14 @@
           ],
         },
         isSeedBackup: false,//种子节点是否备份
+
+        destroyAddress: '',//搭建链转账地址
+        packingState: 0,//打包状态 0未提交 1已提交  2提交审核失败  3打包中 4打包失败  5打包成功
+
+        downloadList: {
+          walletUrl: '',
+          walletProUrl: '',
+        },
 
         isApply: '0', //节点申请方式 0:云节点 1:自行部署
         applyForm: {
@@ -476,15 +529,15 @@
       };
     },
     components: {
+      Password,
       UploadBar
     },
     watch: {},
     created() {
       this.getAccount(this.accountInfo.address);
-      this.addSeedDomain();
+      this.getDestroyAddress();
     },
     mounted() {
-      localStorage.getItem('accountInfo');
     },
     methods: {
 
@@ -499,17 +552,31 @@
             this.addDomain();
           }
         } else if (tab.name === 'fourth') {
-          this.addSeedDomain();
+          if (this.seedForm.seedList.length === 0) {
+            this.addSeedDomain();
+          }
+        } else if (tab.name === 'five') {
+          this.getDestroyAddress();
         }
       },
 
       /**
-       * 业务类型下一步
-       **/
-      stepsNext() {
-        this.next();
-        console.log(API_COFIG);
-        this.infoForm.desc = JSON.stringify(API_COFIG);
+       * @disc: 选择业务类型
+       * @params:e
+       * @date: 2019-10-16 11:49
+       * @author: Wave
+       */
+      choiceSteps(e) {
+        this.isSteps = e;
+      },
+
+      /**
+       * @disc:确定业务场景
+       * @date: 2019-10-16 14:03
+       * @author: Wave
+       */
+      submitSteps() {
+        this.activeName = 'second';
       },
 
       /**
@@ -545,8 +612,12 @@
         const url = API_DATA_URL + '/chain/get/' + address;
         try {
           let res = await axios.post(url);
-          console.log(res.data);
+          //console.log(res.data);
           if (res.data.success) {
+            this.packingState = res.data.result.status;
+            if (this.packingState === 5) {
+              this.getDownloadByChainid(res.data.result.chainId);
+            }
             this.infoForm.name = res.data.result.chainName;
             this.infoForm.logoUrl = res.data.result.logo;
             this.infoForm.prefix = res.data.result.prefix;
@@ -556,35 +627,66 @@
             this.infoForm.total = divisionDecimals(newAssetInfo.initCoins, newAssetInfo.decimals);
             this.infoForm.decimals = newAssetInfo.decimals;
 
-            this.nodeForm.addressList = JSON.parse(res.data.result.genesisInfo);
+            if (res.data.result.genesisInfo) {
+              this.nodeForm.addressList = JSON.parse(res.data.result.genesisInfo);
+            }
+
+            if (res.data.result.seeds) {
+              this.seedForm.seedList = JSON.parse(res.data.result.seeds);
+            }
 
             let newConfigInfo = JSON.parse(res.data.result.configInfo);
             this.infoForm.amount = divisionDecimals(newConfigInfo.inflationAmount, newAssetInfo.decimals);
             this.infoForm.totalAmount = divisionDecimals(newConfigInfo.totalInflationAmount, newAssetInfo.decimals);
-            this.infoForm.startTime = newConfigInfo.initTime;
+            this.infoForm.startTime = newConfigInfo.initTime * 1000;
             this.infoForm.proportion = newConfigInfo.deflationRatio;
             this.infoForm.intervalTime = newConfigInfo.deflationTimeInterval / 86400;
             this.infoForm.desc = res.data.result.configInfo;
+          } else {
+            this.$message({message: '获取账户信息错误', type: 'error', duration: 3000});
           }
         } catch (err) {
-          console.log(err);
+          this.$message({message: '获取账户信息异常:' + err, type: 'error', duration: 3000});
         }
       },
 
       /**
-       * 基本信息提交
-       **/
+       * @disc: 获取下载信息
+       * @params: chainId
+       * @date: 2019-10-14 11:38
+       * @author: Wave
+       */
+      async getDownloadByChainid(chainId) {
+        const url = API_DATA_URL + 'chain/get/download/' + chainId;
+        try {
+          let res = await axios.post(url);
+          //console.log(res.data);
+          if (res.data.success) {
+            this.downloadList.walletUrl = API_DATA_URL + res.data.result.wallet;
+            this.downloadList.walletProUrl = API_DATA_URL + res.data.result.wallet_pro;
+          } else {
+            this.$message({message: '获取下载信息错误', type: 'error', duration: 3000});
+          }
+        } catch (err) {
+          this.$message({message: '获取下载信息异常:' + err, type: 'error', duration: 3000});
+        }
+      },
+
+      /**
+       * @disc: 提交基本信息
+       * @params: formName
+       * @date: 2019-10-16 15:39
+       * @author: Wave
+       */
       async infoSubmitForm(formName) {
         this.$refs[formName].validate(async (valid) => {
           if (valid) {
-            console.log(this.infoForm);
-            //this.next();
             const url = API_DATA_URL + 'chain/info/base/save';
             const data = {
               "chainId": this.infoForm.chainId,
               "address": this.accountInfo.address,
               "chainName": this.infoForm.name,
-              "type": this.isSteps,
+              "type": Number(this.isSteps),
               "prefix": this.infoForm.prefix,
               "logo": this.infoForm.logoUrl,
               "payTimes": 0,
@@ -610,15 +712,21 @@
                 "deflationTimeInterval": this.infoForm.intervalTime * 86400 //时间:秒
               }
             };
-            console.log(data);
             try {
               let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
-              console.log(res);
+              //console.log(res.data);
+              if (res.data.success) {
+                this.getAccount(this.accountInfo.address);
+                this.activeName = 'third';
+                if (this.nodeForm.addressList.length === 0) {
+                  this.addDomain();
+                }
+              } else {
+                this.$message({message: '基本信息提交错误', type: 'error', duration: 3000});
+              }
             } catch (err) {
-              return {success: false, data: err}
+              this.$message({message: '基本信息提交异常:' + err, type: 'error', duration: 3000});
             }
-
-
           } else {
             return false;
           }
@@ -626,11 +734,23 @@
       },
 
       /**
-       * 备份私钥
-       * @param formName
+       * 备份创世块私钥
        * */
-      nodeSubmitForm(formName) {
-        console.log(formName);
+      nodeSubmitForm() {
+        let total = 0;
+        for (let item of this.nodeForm.addressList) {
+          let reg = /^[0-9]*$/;
+          if (!reg.exec(item.coins)) {
+            this.$message({message: '请输入有效的整数', type: 'error', duration: 3000});
+            return;
+          } else {
+            total = total + Number(item.coins);
+          }
+        }
+        if (total !== Number(this.infoForm.total)) {
+          this.$message({message: '创世块总和不等于发现总量', type: 'error', duration: 3000});
+          return;
+        }
         this.addressKeyData = this.nodeForm.addressList;
         this.backupsDialog = true;
       },
@@ -657,33 +777,11 @@
       },
 
       /**
-       * @disc: 数值改变创世块
-       * @date: 2019-10-15 13:52
-       * @author: Wave
-       */
-      changeNumber(e) {
-        console.log(e);
-        console.log(this.nodeForm.addressList);
-      },
-
-      /**
-       * @disc: 时间改变创世块
-       * @date: 2019-10-15 14:09
-       * @author: Wave
-       */
-      changeTime(e) {
-        console.log(e);
-        console.log(this.nodeForm.addressList);
-      },
-
-      /**
-       * @disc: 备份创世块私钥创
-       * @params:
+       * @disc: 下载创世块私钥
        * @date: 2019-10-15 14:13
        * @author: Wave
        */
       backupsNodeList() {
-        //let newKeyList = this.addressKeyData.splice(this.addressKeyData.findIndex(item => item.key === data.key), 1);
         let newKeyList = [];
         for (let item of this.addressKeyData) {
           let {key, ...personUnknowKey} = item;
@@ -706,7 +804,7 @@
         const url = API_DATA_URL + '/chain/info/genesis/save';
         let newNodeList = [];
         for (let item of this.nodeForm.addressList) {
-          let {pri, key, ...personUnknowPri} = item;
+          let {pri, ...personUnknowPri} = item;
           newNodeList.push(personUnknowPri);
         }
         const data = {
@@ -716,9 +814,15 @@
         };
         try {
           let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
-          console.log(res.data);
+          //console.log(res.data);
+          if (res.data.success) {
+            this.getAccount(this.accountInfo.address);
+            this.activeName = 'fourth';
+          } else {
+            this.$message({message: '提交创世块信息错误', type: 'error', duration: 3000});
+          }
         } catch (err) {
-          console.log(err)
+          this.$message({message: '提交创世块信息异常:' + err, type: 'error', duration: 3000});
         }
       },
 
@@ -733,11 +837,10 @@
       //添加种子节点
       addSeedDomain() {
         let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix);
-        console.log(this.seedForm);
         this.seedForm.seedList.push(
           {
             address: newAddressInfo.address,
-            IP: "127.0.0.1",
+            ip: "127.0.0.1",
           }
         );
       },
@@ -755,7 +858,7 @@
       },
 
       /**
-       * @disc: 提交链信息
+       * @disc: 提交共识信息
        * @date: 2019-10-15 17:14
        * @author: Wave
        */
@@ -773,10 +876,105 @@
         };
         try {
           let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
-          console.log(res.data);
+          //console.log(res.data);
+          if (res.data.success) {
+            this.getAccount(this.accountInfo.address);
+            this.activeName = 'five';
+          } else {
+            this.$message({message: '提交共识信息错误', type: 'error', duration: 3000});
+          }
         } catch (err) {
-          console.log(err)
+          this.$message({message: '提交共识信息异常:' + err, type: 'error', duration: 3000});
         }
+      },
+
+      /**
+       * @disc: 获取转账地址
+       * @date: 2019-10-14 11:38
+       * @author: Wave
+       */
+      async getDestroyAddress() {
+        const url = API_DATA_URL + 'account/get/normal/destroyAddress';
+        try {
+          let res = await axios.get(url);
+          //console.log(res.data);
+          if (res.data.success) {
+            this.destroyAddress = res.data.result.address
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      },
+
+      /**
+       * @disc: 确认订单
+       * @date: 2019-10-16 10:39
+       * @author: Wave
+       */
+      confirm() {
+        this.$refs.password.showPassword(true);
+      },
+
+      /**
+       * @disc: 输入密码框提交
+       * @params: password
+       * @date: 2019-09-02 10:49
+       * @author: Wave
+       */
+      async passSubmit(password) {
+        let isPassword = passwordVerification(this.accountInfo, password);
+        if (isPassword.success) {
+          let amount = timesDecimals(200);
+          let remark = '';
+          let newTxhex = await  transferTransaction(isPassword.pri, isPassword.pub, isPassword.address, this.destroyAddress, MAIN_INFO.chainId, MAIN_INFO.assetsId, amount, remark);
+          //console.log(newTxhex);
+          if (!newTxhex.success) {
+            console.log(newTxhex.data);
+            return
+          }
+          let newHash = await validateAndBroadcast(newTxhex.data);
+          //console.log(newHash);
+          if (!newHash.success) {
+            console.log(newHash.data);
+            return
+          }
+          this.submintOrder(newHash.hash);
+        }
+      },
+
+      /**
+       * @disc: 提交订单
+       * @date: 2019-10-15 17:14
+       * @author: Wave
+       */
+      async submintOrder(txHash) {
+        const url = API_DATA_URL + 'chain/info/submit';
+        const data = {
+          "chainId": this.infoForm.chainId,
+          "address": this.accountInfo.address,
+          "isCross": this.isPartake === '1',
+          "txHash": txHash
+        };
+        try {
+          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          if (res.data.success) {
+            this.getAccount(this.accountInfo.address);
+          } else {
+            this.$message({message: '提交订单错误', type: 'error', duration: 3000});
+          }
+        } catch (err) {
+          this.$message({message: '提交订单异常:' + err, type: 'error', duration: 3000});
+        }
+      },
+
+      /**
+       * @disc: 下载文件
+       * @params: url
+       * @date: 2019-10-16 18:03
+       * @author: Wave
+       */
+      download(url){
+        window.open(url);
       },
 
       /**
@@ -882,7 +1080,6 @@
           border-bottom: 1px solid #aec6ff;
         }
       }
-
       .steps-info {
         width: 555px;
         margin: 30px auto 100px;
@@ -901,7 +1098,6 @@
           }
         }
       }
-
       .steps-inflation {
         margin: 30px auto 100px;
         .time {
@@ -911,7 +1107,6 @@
 
         }
       }
-
       .steps-node {
         width: 680px;
         min-height: 120px;
@@ -1000,7 +1195,6 @@
           }
         }
       }
-
       .steps-set {
         .radio {
           margin: 50px auto 20px;
@@ -1014,7 +1208,7 @@
         }
         .seed {
           margin: 0 auto;
-          .el-form{
+          .el-form {
             width: 100%;
             .seed_list {
               .node-address {
@@ -1034,19 +1228,19 @@
                   }
                 }
               }
-              .node-form{
+              .node-form {
                 width: 100%;
-                .number{
+                .number {
                   width: 460px;
                   margin: 0 0 30px 20px;
                 }
               }
             }
           }
-          .seed_backups{
+          .seed_backups {
             width: 320px;
             margin: 20px auto;
-            .el-button{
+            .el-button {
               width: 320px;
             }
           }
@@ -1066,7 +1260,6 @@
           }
         }
       }
-
       .steps-apply {
         .radio {
           margin: 50px auto 20px;
@@ -1102,11 +1295,11 @@
           }
         }
       }
-
       .steps-confirm {
+        margin: 0 0 20px 0;
         .w700 {
           width: 700px;
-          margin: 50px auto 10px;
+          margin: 20px auto 10px;
           .title {
             height: 40px;
             line-height: 40px;
@@ -1164,6 +1357,39 @@
           }
           .node-infos {
             padding: 10px 0 10px 0;
+          }
+        }
+      }
+    }
+    .packing {
+      width: 100%;
+      min-height: 30rem;
+      ul {
+        li {
+          float: left;
+          width: 30%;
+          margin: 0 2.5% 0;
+          text-align: center;
+          &:first-child {
+            margin-left: 0;
+          }
+          &:last-child {
+            margin-right: 0;
+          }
+          h6 {
+            margin: 20px 0 0 0;
+            img {
+              width: 60px;
+              height: 60px;
+            }
+          }
+          p {
+            padding: 20px;
+            text-align: left;
+          }
+          .btn-next {
+            margin: 0 auto 30px;
+            width: 60%;
           }
         }
       }

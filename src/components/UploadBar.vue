@@ -16,6 +16,12 @@
 
   export default {
     name: 'upload',
+    props: {
+      imgUrl: {
+        type: String,
+        default: ''
+      },
+    },
     data() {
       return {
         region: 'oss-cn-hangzhou',
@@ -25,14 +31,19 @@
         url: '',
       }
     },
+    created() {
+      if (this.imgUrl) {
+        this.url = this.imgUrl;
+      }
+    },
     methods: {
-      upload(){
+      upload() {
         document.getElementById(this.uploadId).click()
       },
 
       doUpload() {
         const _this = this;
-        axios.get('http://192.168.1.192:8080/oss').then((result) => {
+        axios.get('http://192.168.1.121:8080/oss').then((result) => {
           const client = new OSS({
             region: result.data.Region,
             accessKeyId: result.data.AccessKeyId,
@@ -50,7 +61,7 @@
               client.multipartUpload(random_name, file, {}).then((results) => {
                 const url = 'http://zlj-1.oss-cn-hangzhou.aliyuncs.com/' + results.name; // 上传完成
                 _this.url = url;
-                _this.$emit('func',_this.url)
+                _this.$emit('func', _this.url)
               }).catch((err) => {
                 console.log(err)
               })
@@ -64,6 +75,10 @@
 
 <style lang="less">
   .upload {
+    width: auto;
+    &:hover {
+      cursor: pointer;
+    }
     .upload_file {
       .file {
         width: 40px;
@@ -73,11 +88,11 @@
         &:hover {
           border-color: #409EFF;
         }
-        img{
+        img {
           width: 40px;
           height: 40px;
         }
-        .el-icon-plus{
+        .el-icon-plus {
           margin: 5px 0 0 0;
           font-size: 28px;
         }
