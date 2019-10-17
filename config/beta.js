@@ -17,6 +17,8 @@ export const API_PREFIX = 'tNULS';
 export let API_URL = IS_DEV ? 'https://beta.wallet.nuls.io/api' : 'https://beta.wallet.nuls.io/api';
 //接口数据api
 export let API_DATA_URL = IS_DEV ? 'http://192.168.1.121:8080/' : 'http://192.168.1.160:8080/';
+//下载地址api
+export let API_DOWNLOAD_URL = IS_DEV ? 'http://192.168.1.121:8083' : 'http://192.168.1.121:8083';
 //请求最迟时间
 export const API_TIME = '8000';
 //浏览器连接地址

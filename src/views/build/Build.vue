@@ -291,7 +291,7 @@
           <p>可通过轻钱包连接本地或网络中可信任节点客户端，进行资产的转入转出等操作</p>
           <el-button type="success" class="btn-next" @click="download(downloadList.walletUrl)">下 载</el-button>
         </li>
-        <li class="bg-gray" >
+        <li class="bg-gray">
           <h6><img src="./../../assets/img/browser.png"/></h6>
           <p>可通过该浏览器查看XXX网络中的账户，交易等信息</p>
           <el-button type="success" class="btn-next" @click="download(downloadList.walletUrl)">下 载</el-button>
@@ -336,7 +336,7 @@
 <script>
   import nuls from 'nuls-sdk-js'
   import axios from 'axios'
-  import {MAIN_INFO, API_COFIG, API_DATA_URL} from '@/config'
+  import {MAIN_INFO, API_COFIG, API_DATA_URL, API_DOWNLOAD_URL} from '@/config'
   import {timesDecimals, divisionDecimals, switchMsec, passwordVerification} from '@/api/util'
   import {transferTransaction, validateAndBroadcast} from '@/api/requestData'
   import UploadBar from '@/components/UploadBar';
@@ -662,8 +662,8 @@
           let res = await axios.post(url);
           //console.log(res.data);
           if (res.data.success) {
-            this.downloadList.walletUrl = API_DATA_URL + res.data.result.wallet;
-            this.downloadList.walletProUrl = API_DATA_URL + res.data.result.wallet_pro;
+            this.downloadList.walletUrl = API_DOWNLOAD_URL + res.data.result.wallet;
+            this.downloadList.walletProUrl = API_DOWNLOAD_URL + res.data.result.wallet_pro;
           } else {
             this.$message({message: '获取下载信息错误', type: 'error', duration: 3000});
           }
@@ -973,7 +973,7 @@
        * @date: 2019-10-16 18:03
        * @author: Wave
        */
-      download(url){
+      download(url) {
         window.open(url);
       },
 
