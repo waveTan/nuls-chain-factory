@@ -10,6 +10,8 @@ export const IS_DEV = process.env.NODE_ENV !== 'production';
 export const RUN_DEV = true;
 //链信息
 export const MAIN_INFO = {chainId:1,assetsId:1};
+//燃烧地址的公钥
+export const API_BURNING_ADDRESS_PUB = '000000000000000000000000000000000000000000000000000000000000000000';
 //链前缀
 export const API_PREFIX = 'NULS';
 //网络数据api

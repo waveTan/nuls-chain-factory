@@ -154,16 +154,16 @@
 
           </el-row>
         </el-tab-pane>
-        <el-tab-pane label="链信息" name="fourth">
+        <el-tab-pane label="配置种子节点" name="fourth">
           <!--链信息-->
           <el-row class="steps-set">
-            <el-col class="tc radio">
+            <!--<el-col class="tc radio">
               <el-radio v-model="isPartake" label='1'>参与跨链</el-radio>
               <el-radio v-model="isPartake" label='0'>不参与跨链</el-radio>
             </el-col>
             <div class="tc tips font16">
-              <p v-show="isPartake ==='1'">需缴纳跨链抵押金: <span class="yellow">20000</span> <font class="fCN">NULS</font></p>
-            </div>
+              <p v-show="isPartake ==='1'">需缴纳跨链抵押金: <span class="yellow">1000</span> <font class="fCN">NULS</font></p>
+            </div>-->
             <div class="seed cb w630">
               <el-form :model="seedForm" ref="seedForm">
                 <el-col class="seed_list bg-gray" v-for="(domain, index) in seedForm.seedList" :key="index">
@@ -237,7 +237,7 @@
               <div class="title bg-gray cb">链信息</div>
               <div class="infos">
                 <p class="cb"><span class="fl">是否跨链</span><font class="fl">{{isPartake=== '1' ? '是':'否' }}</font></p>
-                <p class="cb"><span class="fl">抵押金</span><font class="fl">{{isPartake=== '1' ? '20000':'0' }} <font
+                <p class="cb"><span class="fl">抵押金</span><font class="fl">{{isPartake=== '1' ? '1000':'0' }} <font
                         class="fCN">NULS</font></font></p>
               </div>
 
@@ -302,22 +302,30 @@
     <div class="w1200 bg-white bottoms cb" v-show="activeName ==='five'">
       <div class="b-left fl">
         <div class="fl total">
-          <p>总费用: <span class="yellow">{{200 + Number(isPartake)*20000}}</span><font class="fCN">&nbsp;NULS</font></p>
+          <p>总费用: <span class="yellow">{{ isPartake ? 1000: 200}}</span><font class="fCN">&nbsp;NULS</font></p>
         </div>
         <el-popover placement="top" width="320" trigger="click" class="popover">
           <div class="detailed">
             <h6 class="bg-gray">账单明细</h6>
-            <p class="cb"><u class="fl gray">创建基本信息</u><span class="fl">200</span><font class="fCN">&nbsp;NULS</font>
+            <p class="cb">
+              <u class="fl gray">创建基本信息</u>
+              <span class="fl">{{isPartake ? 0:200 }}</span>
+              <font class="fCN">&nbsp;NULS</font>
             </p>
-            <p class="cb"><u class="fl gray">跨链抵押</u><span class="fl">{{isPartake==='1' ? '20000':'0' }} </span><font
-                    class="fCN">&nbsp;NULS</font></p>
+            <p class="cb">
+              <el-checkbox v-model="isPartake" class="partake fl"></el-checkbox>
+              <u class="fl gray">跨链抵押</u>
+              <span class="fl">{{isPartake? 1000:0 }} </span>
+              <font class="fCN">&nbsp;NULS</font>
+            </p>
             <!--<p class="cb"><u class="fl gray">运行3个种子节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
             </p>
             <p class="cb"><u class="fl gray">运行5个共识节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
             </p>-->
-            <p class="cb all"><u class="fl gray">总计</u><span
-                    class="yellow fl">{{200 + Number(isPartake)*20000}}</span><font
-                    class="fCN">&nbsp;NULS</font></p>
+            <p class="cb all">
+              <u class="fl gray">总计</u>
+              <span class="yellow fl">{{ isPartake ? 1000: 200}}</span>
+              <font class="fCN">&nbsp;NULS</font></p>
           </div>
           <el-link :underline="false" type="primary" slot="reference">明细</el-link>
         </el-popover>
@@ -336,9 +344,15 @@
 <script>
   import nuls from 'nuls-sdk-js'
   import axios from 'axios'
-  import {MAIN_INFO, API_COFIG, API_DATA_URL, API_DOWNLOAD_URL} from '@/config'
+  import {MAIN_INFO, API_PREFIX, API_COFIG, API_DATA_URL, API_DOWNLOAD_URL, API_BURNING_ADDRESS_PUB} from '@/config'
   import {timesDecimals, divisionDecimals, switchMsec, passwordVerification} from '@/api/util'
-  import {transferTransaction, validateAndBroadcast} from '@/api/requestData'
+  import {
+    transferTransaction,
+    validateAndBroadcast,
+    mutiInputsOrOutputs,
+    getBalanceOrNonceByAddress,
+    countFee
+  } from '@/api/requestData'
   import UploadBar from '@/components/UploadBar';
   import Password from '@/components/PasswordBar'
 
@@ -439,12 +453,12 @@
 
         //基本信息表单
         infoForm: {
-          name: 'wave',
+          name: 'Cwave',
           logoUrl: 'http://zlj-1.oss-cn-hangzhou.aliyuncs.com/1565085680556.png',
-          prefix: 'wave',
-          symbol: 'wave',
-          total: 8000,
-          decimals: 5,
+          prefix: 'Cwave',
+          symbol: 'Cwave',
+          total: 10000,
+          decimals: 3,
           amount: 500,
           totalAmount: 5000,
           startTime: '2019-11-23 00:00:00',
@@ -497,7 +511,7 @@
         addressKeyData: [],
         isBackup: false,//是否已经备份
 
-        isPartake: '0', //设置跨链模式 0:不参与跨链 1:参与跨链
+        isPartake: true, //设置跨链模式 false:不参与跨链 true:参与跨链
         seedForm: {
           seedList: [],
         },
@@ -612,36 +626,40 @@
         const url = API_DATA_URL + '/chain/get/' + address;
         try {
           let res = await axios.post(url);
-          //console.log(res.data);
+          console.log(res.data);
           if (res.data.success) {
-            this.packingState = res.data.result.status;
-            if (this.packingState === 5) {
-              this.getDownloadByChainid(res.data.result.chainId);
-            }
-            this.infoForm.name = res.data.result.chainName;
-            this.infoForm.logoUrl = res.data.result.logo;
-            this.infoForm.prefix = res.data.result.prefix;
-            this.infoForm.chainId = res.data.result.chainId;
-            let newAssetInfo = res.data.result.assetInfo;
-            this.infoForm.symbol = newAssetInfo.symbol;
-            this.infoForm.total = divisionDecimals(newAssetInfo.initCoins, newAssetInfo.decimals);
-            this.infoForm.decimals = newAssetInfo.decimals;
+            if (!res.data.hasOwnProperty('result')) {
+              this.packingState = 0;
+            } else {
+              this.packingState = res.data.result.status;
+              if (this.packingState === 5) {
+                this.getDownloadByChainid(res.data.result.chainId);
+              }
+              this.infoForm.name = res.data.result.chainName;
+              this.infoForm.logoUrl = res.data.result.logo;
+              this.infoForm.prefix = res.data.result.prefix;
+              this.infoForm.chainId = res.data.result.chainId;
+              let newAssetInfo = res.data.result.assetInfo;
+              this.infoForm.symbol = newAssetInfo.symbol;
+              this.infoForm.total = divisionDecimals(newAssetInfo.initCoins, newAssetInfo.decimals);
+              this.infoForm.decimals = newAssetInfo.decimals;
 
-            if (res.data.result.genesisInfo) {
-              this.nodeForm.addressList = JSON.parse(res.data.result.genesisInfo);
-            }
+              if (res.data.result.genesisInfo) {
+                this.nodeForm.addressList = JSON.parse(res.data.result.genesisInfo);
+              }
 
-            if (res.data.result.seeds) {
-              this.seedForm.seedList = JSON.parse(res.data.result.seeds);
-            }
+              if (res.data.result.seeds) {
+                this.seedForm.seedList = JSON.parse(res.data.result.seeds);
+              }
 
-            let newConfigInfo = JSON.parse(res.data.result.configInfo);
-            this.infoForm.amount = divisionDecimals(newConfigInfo.inflationAmount, newAssetInfo.decimals);
-            this.infoForm.totalAmount = divisionDecimals(newConfigInfo.totalInflationAmount, newAssetInfo.decimals);
-            this.infoForm.startTime = newConfigInfo.initTime * 1000;
-            this.infoForm.proportion = newConfigInfo.deflationRatio;
-            this.infoForm.intervalTime = newConfigInfo.deflationTimeInterval / 86400;
-            this.infoForm.desc = res.data.result.configInfo;
+              let newConfigInfo = JSON.parse(res.data.result.configInfo);
+              this.infoForm.amount = divisionDecimals(newConfigInfo.inflationAmount, newAssetInfo.decimals);
+              this.infoForm.totalAmount = divisionDecimals(newConfigInfo.totalInflationAmount, newAssetInfo.decimals);
+              this.infoForm.startTime = newConfigInfo.initTime * 1000;
+              this.infoForm.proportion = newConfigInfo.deflationRatio;
+              this.infoForm.intervalTime = newConfigInfo.deflationTimeInterval / 86400;
+              this.infoForm.desc = res.data.result.configInfo;
+            }
           } else {
             this.$message({message: '获取账户信息错误', type: 'error', duration: 3000});
           }
@@ -699,12 +717,12 @@
                 "decimals": this.infoForm.decimals
               },
               "config": {
-                "packingInterval": 10,
-                "nodeMaxIn": 20,
-                "nodeMaxOut": 50,
-                "syncBlockCount": 10,
-                "networkPort": 18001,
-                "magicNumber": 89898989,
+                "packingInterval": JSON.parse(this.infoForm.desc).packingInterval,
+                "nodeMaxIn": JSON.parse(this.infoForm.desc).nodeMaxIn,
+                "nodeMaxOut": JSON.parse(this.infoForm.desc).nodeMaxOut,
+                "syncBlockCount": JSON.parse(this.infoForm.desc).syncBlockCount,
+                "networkPort": JSON.parse(this.infoForm.desc).networkPort,
+                "magicNumber": JSON.parse(this.infoForm.desc).magicNumber === 100 ? Math.floor(Math.random() * 100000000) : JSON.parse(this.infoForm.desc).magicNumber,
                 "inflationAmount": timesDecimals(this.infoForm.amount, this.infoForm.decimals),
                 "totalInflationAmount": timesDecimals(this.infoForm.totalAmount, this.infoForm.decimals),
                 "initTime": switchMsec(this.infoForm.startTime) / 1000, //时间挫
@@ -712,6 +730,7 @@
                 "deflationTimeInterval": this.infoForm.intervalTime * 86400 //时间:秒
               }
             };
+            //console.log(data);
             try {
               let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
               //console.log(res.data);
@@ -916,6 +935,65 @@
       },
 
       /**
+       * @disc: 组装跨链模式交易
+       * @params:
+       * @date: 2019-10-18 16:14
+       * @author: Wave
+       */
+      async registerChainAndAsset(mainInfo, addressInfo, chainInfo, assetInfo) {
+        const balanceInfo = await getBalanceOrNonceByAddress(mainInfo.chainId, mainInfo.assetsId, addressInfo.address);
+
+        if (!balanceInfo.success) {
+          console.log("获取账户余额错误:" + balanceInfo.data);
+          return
+        }
+
+        let transferInfo = {
+          assetsChainId: 2,
+          assetsId: 1,
+          fee: 100000,
+          from: {
+            fromAddress: addressInfo.address,
+            amount: 100000000000
+          },
+          to: [{
+            toAddress: address,
+            amount: 80000000000,
+            loctTime: -1
+          }, {
+            toAddress: nuls.getAddressByPub(MAIN_INFO.chainId, MAIN_INFO.assetsId, API_BURNING_ADDRESS_PUB, API_PREFIX),
+            amount: 20000000000
+          }]
+        };
+        let inOrOutputs = await mutiInputsOrOutputs(transferInfo, balanceInfo, 11);
+        let tAssemble = [];//交易组装
+        let txhex = "";//交易签名
+        if (inOrOutputs.success) {
+          let txData = {
+            address: address,
+            chainInfo: chainInfo,
+            assetInfo: assetInfo
+          };
+          tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
+          //获取手续费
+          let newFee = countFee(tAssemble, 1);
+          //手续费大于0.001的时候重新组装交易及签名
+          if (transferInfo.fee !== newFee) {
+            transferInfo.fee = newFee;
+            inOrOutputs = await mutiInputsOrOutputs(transferInfo, balanceInfo, 11);
+            tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
+            txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
+          } else {
+            txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
+          }
+        } else {
+          console.log(inOrOutputs.data);
+          return;
+        }
+        console.log(txhex);
+      },
+
+      /**
        * @disc: 输入密码框提交
        * @params: password
        * @date: 2019-09-02 10:49
@@ -926,19 +1004,44 @@
         if (isPassword.success) {
           let amount = timesDecimals(200);
           let remark = '';
-          let newTxhex = await  transferTransaction(isPassword.pri, isPassword.pub, isPassword.address, this.destroyAddress, MAIN_INFO.chainId, MAIN_INFO.assetsId, amount, remark);
-          //console.log(newTxhex);
-          if (!newTxhex.success) {
-            console.log(newTxhex.data);
+          let newTxhex = '';
+          if (this.isPartake === '1') {
+            console.log("跨链");
+            let chainInfo = {
+              chainId: this.infoForm.chainId,
+              addressType: "1", //1 使用NULS框架构建的链 生态内，2生态外"
+              chainName: this.infoForm.name,
+              addressPrefix: this.infoForm.prefix,
+              magicNumber: JSON.stringify(this.infoForm.desc).magicNumber,
+              supportInflowAsset: true,
+              verifierList: this.seedForm.seedList,
+              minAvailableNodeNum: 3,
+              maxSignatureCount: 200,
+              signatureBFTRatio: 66
+            };
+            let assetInfo = {
+              assetId: 1,
+              symbol: this.infoForm.symbol,
+              assetName: this.infoForm.name,
+              initNumber: this.infoForm.amount,
+              decimalPlaces: this.infoForm.decimals
+            };
+            this.registerChainAndAsset(MAIN_INFO, isPassword, chainInfo, assetInfo);
+          } else {
+            newTxhex = await  transferTransaction(isPassword.pri, isPassword.pub, isPassword.address, this.destroyAddress, MAIN_INFO.chainId, MAIN_INFO.assetsId, amount, remark);
+          }
+          console.log(newTxhex);
+          /*if (!newTxhex.success) {
+            this.$message({message: '搭建链转账错误:' + newTxhex.data, type: 'error', duration: 3000});
             return
           }
           let newHash = await validateAndBroadcast(newTxhex.data);
           //console.log(newHash);
           if (!newHash.success) {
-            console.log(newHash.data);
+            this.$message({message: '搭建链转账验证广播交易错误:' + newTxhex.data, type: 'error', duration: 3000});
             return
           }
-          this.submintOrder(newHash.hash);
+          this.submintOrder(newHash.hash);*/
         }
       },
 
@@ -952,7 +1055,7 @@
         const data = {
           "chainId": this.infoForm.chainId,
           "address": this.accountInfo.address,
-          "isCross": this.isPartake === '1',
+          "isCross": this.isPartake,
           "txHash": txHash
         };
         try {
@@ -1418,13 +1521,13 @@
       h6 {
         font-size: 24px;
         color: #17202e;
-        padding: 10px 0 10px 20px;
+        padding: 10px 0 10px 30px;
         margin: 0 0 20px 0;
       }
       p {
         line-height: 28px;
         font-size: 16px;
-        padding: 0 0 0 20px;
+        padding: 0 0 0 30px;
         u {
           display: block;
           width: 150px;
@@ -1432,10 +1535,13 @@
         span {
           color: #17202e;
         }
+        .partake {
+          margin-left: -20px;
+        }
       }
       .all {
         border-top: @BD1;
-        padding: 5px 0 15px 20px;
+        padding: 5px 0 15px 30px;
         span {
           color: #FD9D2D;
           font-size: 20px;

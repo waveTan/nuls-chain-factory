@@ -241,7 +241,6 @@
           if (valid) {
             const keyAddressInfo = nuls.importByKey(MAIN_INFO.chainId, this.importForm.keys, this.importForm.pass, API_PREFIX);
             let addressInfo = await getAddressInfoByAddress(keyAddressInfo.address);
-            //console.log(addressInfo);
             if (addressInfo.success) {
               let newAddressInfo = {...keyAddressInfo, ...addressInfo.data};
               localStorage.setItem('accountInfo', JSON.stringify(newAddressInfo));

@@ -11,14 +11,16 @@ export const IS_DEV = process.env.NODE_ENV !== 'production';
 export const RUN_DEV = false;
 //链信息
 export const MAIN_INFO = {chainId: 2, assetsId: 1};
+//燃烧地址的公钥
+export const API_BURNING_ADDRESS_PUB = '000000000000000000000000000000000000000000000000000000000000000000';
 //链前缀
 export const API_PREFIX = 'tNULS';
 //网络数据api
-export let API_URL = IS_DEV ? 'https://beta.wallet.nuls.io/api' : 'https://beta.wallet.nuls.io/api';
+export let API_URL = IS_DEV ? 'http://192.168.1.160:18003/' : 'http://192.168.1.160:18003/';
 //接口数据api
-export let API_DATA_URL = IS_DEV ? 'http://192.168.1.121:8080/' : 'http://192.168.1.160:8080/';
+export let API_DATA_URL = IS_DEV ? 'http://192.168.1.160:8080/' : 'http://192.168.1.160:8080/';
 //下载地址api
-export let API_DOWNLOAD_URL = IS_DEV ? 'http://192.168.1.121:8083' : 'http://192.168.1.121:8083';
+export let API_DOWNLOAD_URL = IS_DEV ? 'http://192.168.1.160:8083' : 'http://192.168.1.160:8083';
 //请求最迟时间
 export const API_TIME = '8000';
 //浏览器连接地址

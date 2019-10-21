@@ -6,7 +6,7 @@
         <font class="fr">余额: {{accountAddress.balance}} <font class="fCN">NULS</font></font>
       </div>
       <div class="cb"></div>
-      <div class="bg-white w1200 user-bottom">
+      <div class="bg-white w1200 user-bottom" v-show="packingState !== 0">
         <div class="left fl">
           <div class="steps-confirm">
             <div class="w700">
@@ -67,7 +67,7 @@
           </div>
         </div>
         <div class="right fr">
-          <el-button type="success" class="btn-next" @click="downloadResources">下载资源</el-button>
+          <el-button type="success" class="btn-next" @click="toUrl('build')">下载资源</el-button>
         </div>
       </div>
       <div class="cb"></div>
@@ -164,46 +164,41 @@
           let res = await axios.post(url);
           //console.log(res.data);
           if (res.data.success) {
-            this.packingState = res.data.result.status;
-            this.infoForm.name = res.data.result.chainName;
-            this.infoForm.logoUrl = res.data.result.logo;
-            this.infoForm.prefix = res.data.result.prefix;
-            this.infoForm.chainId = res.data.result.chainId;
-            let newAssetInfo = res.data.result.assetInfo;
-            this.infoForm.symbol = newAssetInfo.symbol;
-            this.infoForm.total = divisionDecimals(newAssetInfo.initCoins, newAssetInfo.decimals);
-            this.infoForm.decimals = newAssetInfo.decimals;
+            if (!res.data.hasOwnProperty('result')) {
+              this.packingState = 0;
+            } else {
+              this.packingState = res.data.result.status;
+              this.infoForm.name = res.data.result.chainName;
+              this.infoForm.logoUrl = res.data.result.logo;
+              this.infoForm.prefix = res.data.result.prefix;
+              this.infoForm.chainId = res.data.result.chainId;
+              let newAssetInfo = res.data.result.assetInfo;
+              this.infoForm.symbol = newAssetInfo.symbol;
+              this.infoForm.total = divisionDecimals(newAssetInfo.initCoins, newAssetInfo.decimals);
+              this.infoForm.decimals = newAssetInfo.decimals;
 
-            if (res.data.result.genesisInfo) {
-              this.nodeForm.addressList = JSON.parse(res.data.result.genesisInfo);
+              if (res.data.result.genesisInfo) {
+                this.nodeForm.addressList = JSON.parse(res.data.result.genesisInfo);
+              }
+
+              if (res.data.result.seeds) {
+                this.seedForm.seedList = JSON.parse(res.data.result.seeds);
+              }
+
+              let newConfigInfo = JSON.parse(res.data.result.configInfo);
+              this.infoForm.amount = divisionDecimals(newConfigInfo.inflationAmount, newAssetInfo.decimals);
+              this.infoForm.totalAmount = divisionDecimals(newConfigInfo.totalInflationAmount, newAssetInfo.decimals);
+              this.infoForm.startTime = newConfigInfo.initTime * 1000;
+              this.infoForm.proportion = newConfigInfo.deflationRatio;
+              this.infoForm.intervalTime = newConfigInfo.deflationTimeInterval / 86400;
+              this.infoForm.desc = res.data.result.configInfo;
             }
-
-            if (res.data.result.seeds) {
-              this.seedForm.seedList = JSON.parse(res.data.result.seeds);
-            }
-
-            let newConfigInfo = JSON.parse(res.data.result.configInfo);
-            this.infoForm.amount = divisionDecimals(newConfigInfo.inflationAmount, newAssetInfo.decimals);
-            this.infoForm.totalAmount = divisionDecimals(newConfigInfo.totalInflationAmount, newAssetInfo.decimals);
-            this.infoForm.startTime = newConfigInfo.initTime * 1000;
-            this.infoForm.proportion = newConfigInfo.deflationRatio;
-            this.infoForm.intervalTime = newConfigInfo.deflationTimeInterval / 86400;
-            this.infoForm.desc = res.data.result.configInfo;
           } else {
             console.log('获取账户信息错误!')
           }
         } catch (err) {
           console.log(err);
         }
-      },
-
-      /**
-       * @disc: 现在资源方法
-       * @date: 2019-10-16 17:29
-       * @author: Wave
-       */
-      downloadResources(){
-        console.log("downloadResources");
       },
 
       /**

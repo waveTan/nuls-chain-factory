@@ -28,7 +28,6 @@ export function countCtxFee(tx, signatrueCount) {
 /**
  * 获取地址信息根据地址
  * @param address
- * @returns {Promise<any>}
  */
 export async function getAddressInfoByAddress(address) {
   let newAccountRegister = await accountRegister(address);
@@ -46,7 +45,7 @@ export async function getAddressInfoByAddress(address) {
         return {success: false, data: error};
       });
   } else {
-    console.log(newAccountRegister.data)
+    return {success: false, code: 2001, data: newAccountRegister.data};
   }
 
 }
@@ -141,6 +140,41 @@ export async function inputsOrOutputs(transferInfo, balanceInfo, type) {
 }
 
 /**
+ * 注册跨链交易获取inputs 、 outputs
+ * @param transferInfo
+ * @param balanceInfo
+ * @returns {*}
+ */
+export async function mutiInputsOrOutputs(transferInfo, balanceInfo) {
+  let newAmount = transferInfo.from.amount + transferInfo.fee;
+  let newLocked = 0;
+  let newNonce = balanceInfo.nonce;
+  if (balanceInfo.balance < newAmount) {
+    return {success: false, data: "Your balance is not enough."}
+  }
+  let inputs = [{
+    address: transferInfo.from.fromAddress,
+    assetsChainId: transferInfo.assetsChainId,
+    assetsId: transferInfo.assetsId,
+    amount: newAmount,
+    locked: newLocked,
+    nonce: newNonce
+  }];
+  let outputs = [];
+  for (let i = 0; i < transferInfo.to.length; i++) {
+    let to = transferInfo.to[i];
+    outputs.push({
+      address: to.toAddress,
+      assetsChainId: transferInfo.assetsChainId,
+      assetsId: transferInfo.assetsId,
+      amount: to.amount,
+      lockTime: to.lockTime ? to.lockTime : 0
+    })
+  }
+  return {success: true, data: {inputs: inputs, outputs: outputs}};
+}
+
+/**
  * @disc: 注册账户
  * @params: address
  * @date: 2019-10-14 11:38
@@ -155,7 +189,8 @@ export async function accountRegister(address) {
     if (res.data.success && res.data.hasOwnProperty('result')) {
       return {success: true, data: res.data.result}
     } else {
-      return {success: false}
+      //return res.data
+      return {success: false,data:res.data.error}
     }
   } catch (err) {
     return {success: false, data: err}
@@ -177,7 +212,7 @@ export async function transferTransaction(pri, pub, fromAddress, toAddress, chai
   const balanceInfo = await getBalanceOrNonceByAddress(chainId, assetsId, fromAddress);
 
   if (!balanceInfo.success) {
-    return {success:false,data:balanceInfo.data}
+    return {success: false, data: balanceInfo.data}
   }
 
   let transferInfo = {
@@ -205,9 +240,9 @@ export async function transferTransaction(pri, pub, fromAddress, toAddress, chai
       txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
     }
   } else {
-    return {success:false,data:inOrOutputs.data}
+    return {success: false, data: inOrOutputs.data}
   }
-  return {success:true,data:txhex}
+  return {success: true, data: txhex}
 }
 
 /**
