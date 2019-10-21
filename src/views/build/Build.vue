@@ -44,7 +44,10 @@
                 <li>社交应用</li>
               </ul>
             </div>
-            <el-button type="success" class="btn-next" @click="submitSteps">提交业务场景</el-button>
+            <el-button type="success" class="btn-next" @click="toUrl('newAddress')" v-if="!accountInfo.address">
+              登录
+            </el-button>
+            <el-button type="success" class="btn-next" @click="submitSteps" v-else>提交业务场景</el-button>
           </div>
         </el-tab-pane>
         <el-tab-pane label="填写基本信息" name="second">
@@ -100,7 +103,10 @@
                 <el-input type="textarea" :rows="5" v-model="infoForm.desc"></el-input>
               </el-form-item>
               <el-form-item class="tc">
-                <el-button type="primary" class="btn-next" @click="infoSubmitForm('infoForm')">提交基本信息</el-button>
+                <el-button type="success" class="btn-next" @click="toUrl('newAddress')" v-if="!accountInfo.address">
+                  登录
+                </el-button>
+                <el-button type="primary" class="btn-next" @click="infoSubmitForm('infoForm')" v-else>提交基本信息</el-button>
               </el-form-item>
             </el-form>
           </el-row>
@@ -134,8 +140,10 @@
                   <el-button type="success" @click="nodeSubmitForm('nodeForm')">备份地址私钥</el-button>
                 </div>
                 <div class="btn">
-                  <el-button @click="submintNodeInfo" :disabled="!isBackup">提交创世块信息
+                  <el-button type="success" class="btn-next" @click="toUrl('newAddress')" v-if="!accountInfo.address">
+                    登录
                   </el-button>
+                  <el-button @click="submintNodeInfo" :disabled="!isBackup" v-else>提交创世块信息</el-button>
                 </div>
               </el-form-item>
             </el-form>
@@ -157,13 +165,6 @@
         <el-tab-pane label="配置种子节点" name="fourth">
           <!--链信息-->
           <el-row class="steps-set">
-            <!--<el-col class="tc radio">
-              <el-radio v-model="isPartake" label='1'>参与跨链</el-radio>
-              <el-radio v-model="isPartake" label='0'>不参与跨链</el-radio>
-            </el-col>
-            <div class="tc tips font16">
-              <p v-show="isPartake ==='1'">需缴纳跨链抵押金: <span class="yellow">1000</span> <font class="fCN">NULS</font></p>
-            </div>-->
             <div class="seed cb w630">
               <el-form :model="seedForm" ref="seedForm">
                 <el-col class="seed_list bg-gray" v-for="(domain, index) in seedForm.seedList" :key="index">
@@ -187,11 +188,11 @@
               </div>
             </div>
             <div class="btn-next tc">
-              <!--<div class="balance">
-                当前账户余额: {{accountInfo.balance}} <span class="fCN">NULS</span>
-              </div>-->
               <div class="btn">
-                <el-button type="success" @click="submintChainInfo" :disabled="!isSeedBackup">提交链信息</el-button>
+                <el-button type="success" class="btn-next" @click="toUrl('newAddress')" v-if="!accountInfo.address">
+                  登录
+                </el-button>
+                <el-button type="success" @click="submintChainInfo" :disabled="!isSeedBackup" v-else>提交链信息</el-button>
               </div>
             </div>
 
@@ -325,7 +326,10 @@
 
       </div>
       <div class="b-right fr">
-        <el-button type="success" @click="confirm">确认订单</el-button>
+        <el-button type="success" class="btn-next" @click="toUrl('newAddress')" v-if="!accountInfo.address">
+          登录
+        </el-button>
+        <el-button type="success" @click="confirm" :disabled="isSubmit" v-else>确认订单</el-button>
       </div>
     </div>
     <Password ref="password" @passwordSubmit="passSubmit">
@@ -446,17 +450,17 @@
 
         //基本信息表单
         infoForm: {
-          name: 'Cwave',
-          logoUrl: 'http://zlj-1.oss-cn-hangzhou.aliyuncs.com/1565085680556.png',
-          prefix: 'Cwave',
-          symbol: 'Cwave',
-          total: 10000,
-          decimals: 3,
-          amount: 500,
-          totalAmount: 5000,
-          startTime: '2019-11-23 00:00:00',
-          proportion: 10,
-          intervalTime: 100,
+          name: '',
+          logoUrl: '',
+          prefix: '',
+          symbol: '',
+          total: '',
+          decimals: '',
+          amount: '',
+          totalAmount: '',
+          startTime: '',
+          proportion: '',
+          intervalTime: '',
           senior: false,
           desc: JSON.stringify(API_COFIG),
         },
@@ -515,13 +519,15 @@
         },
         isSeedBackup: false,//种子节点是否备份
 
+        isSubmit: true,//提交订单是否禁用
+
         destroyAddress: '',//搭建链转账地址
         packingState: 0,//打包状态 0未提交 1已提交  2提交审核失败  3打包中 4打包失败  5打包成功
 
         downloadList: {
           walletUrl: '',
           walletProUrl: '',
-        },
+        }, //下载地址
 
         isApply: '0', //节点申请方式 0:云节点 1:自行部署
         applyForm: {
@@ -541,7 +547,6 @@
     },
     watch: {},
     created() {
-
       if (this.accountInfo.address) {
         this.getAccount(this.accountInfo.address);
       }
@@ -567,6 +572,9 @@
           }
         } else if (tab.name === 'five') {
           this.getDestroyAddress();
+          if (this.nodeForm.addressList.length > 0 && this.seedForm.seedList.length > 0) {
+            this.isSubmit = false;
+          }
         }
       },
 
@@ -624,9 +632,9 @@
           let res = await axios.post(url);
           //console.log(res.data);
           if (res.data.success) {
-            this.activeName = 'first';
             if (!res.data.hasOwnProperty('result')) {
               this.packingState = 0;
+              this.activeName = 'first';
             } else {
               this.packingState = res.data.result.status;
               if (this.packingState === 5) {
@@ -698,7 +706,7 @@
           if (valid) {
             const url = API_DATA_URL + 'chain/info/base/save';
             const data = {
-              "chainId": this.infoForm.chainId,
+              "chainId": this.infoForm.chainId ? this.infoForm.chainId : 0,
               "address": this.accountInfo.address,
               "chainName": this.infoForm.name,
               "type": Number(this.isSteps),
@@ -727,10 +735,10 @@
                 "deflationTimeInterval": this.infoForm.intervalTime * 86400 //时间:秒
               }
             };
-            //console.log(data);
+            console.log(data);
             try {
               let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
-              //console.log(res.data);
+              console.log(res);
               if (res.data.success) {
                 this.getAccount(this.accountInfo.address);
                 this.activeName = 'third';
@@ -738,10 +746,10 @@
                   this.addDomain();
                 }
               } else {
-                this.$message({message: '基本信息提交错误', type: 'error', duration: 3000});
+                this.$message({message: '基本信息提交错误:' + JSON.parse(res.data.error), type: 'error', duration: 3000});
               }
             } catch (err) {
-              this.$message({message: '基本信息提交异常:' + err, type: 'error', duration: 3000});
+              this.$message({message: '基本信息提交异常:' + JSON.parse(err), type: 'error', duration: 3000});
             }
           } else {
             return false;
@@ -877,7 +885,7 @@
       },
 
       /**
-       * @disc: 提交共识信息
+       * @disc: 提交种子节点信息
        * @date: 2019-10-15 17:14
        * @author: Wave
        */
@@ -899,6 +907,9 @@
           if (res.data.success) {
             this.getAccount(this.accountInfo.address);
             this.activeName = 'five';
+            if (this.nodeForm.addressList.length > 0 && this.seedForm.seedList.length > 0) {
+              this.isSubmit = false;
+            }
           } else {
             this.$message({message: '提交共识信息错误', type: 'error', duration: 3000});
           }
@@ -931,7 +942,12 @@
        * @author: Wave
        */
       confirm() {
-        this.$refs.password.showPassword(true);
+        let minBalance = this.isPartake ? 1000 : 200;
+        if (this.accountInfo.balance < minBalance) {
+          this.$message({message: '对不起，您的余额不足，搭建链需要消耗' + minBalance + 'NULS', type: 'error', duration: 3000});
+        } else {
+          this.$refs.password.showPassword(true);
+        }
       },
 
       /**
