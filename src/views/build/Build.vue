@@ -234,13 +234,6 @@
                 </ul>
               </div>
 
-              <div class="title bg-gray cb">链信息</div>
-              <div class="infos">
-                <p class="cb"><span class="fl">是否跨链</span><font class="fl">{{isPartake=== '1' ? '是':'否' }}</font></p>
-                <p class="cb"><span class="fl">抵押金</span><font class="fl">{{isPartake=== '1' ? '1000':'0' }} <font
-                        class="fCN">NULS</font></font></p>
-              </div>
-
               <div class="title bg-gray">种子节点</div>
               <div class="infos node-infos">
                 <ul>
@@ -280,7 +273,7 @@
       <div class="font16 tc" v-show="packingState ===3">
         链打包中...<i class="el-icon-loading"></i>
       </div>
-      <ul class="w1200">
+      <ul class="w1200" v-show="packingState ===5">
         <li class="bg-gray">
           <h6><img src="./../../assets/img/client.png"/></h6>
           <p>可通过该客户端创建共识节点，维护网络XXX的区块链网络</p>
@@ -548,7 +541,10 @@
     },
     watch: {},
     created() {
-      this.getAccount(this.accountInfo.address);
+
+      if (this.accountInfo.address) {
+        this.getAccount(this.accountInfo.address);
+      }
       this.getDestroyAddress();
     },
     mounted() {
@@ -626,8 +622,9 @@
         const url = API_DATA_URL + '/chain/get/' + address;
         try {
           let res = await axios.post(url);
-          console.log(res.data);
+          //console.log(res.data);
           if (res.data.success) {
+            this.activeName = 'first';
             if (!res.data.hasOwnProperty('result')) {
               this.packingState = 0;
             } else {
@@ -661,7 +658,7 @@
               this.infoForm.desc = res.data.result.configInfo;
             }
           } else {
-            this.$message({message: '获取账户信息错误', type: 'error', duration: 3000});
+            this.$message({message: '获取账户信息错误:' + JSON.stringify(res.data.error), type: 'error', duration: 3000});
           }
         } catch (err) {
           this.$message({message: '获取账户信息异常:' + err, type: 'error', duration: 3000});
@@ -837,6 +834,9 @@
           if (res.data.success) {
             this.getAccount(this.accountInfo.address);
             this.activeName = 'fourth';
+            if (this.seedForm.seedList.length === 0) {
+              this.addSeedDomain();
+            }
           } else {
             this.$message({message: '提交创世块信息错误', type: 'error', duration: 3000});
           }
@@ -957,7 +957,7 @@
             amount: 100000000000
           },
           to: [{
-            toAddress: address,
+            toAddress: addressInfo.address,
             amount: 80000000000,
             loctTime: -1
           }, {
@@ -965,32 +965,34 @@
             amount: 20000000000
           }]
         };
-        let inOrOutputs = await mutiInputsOrOutputs(transferInfo, balanceInfo, 11);
+        //console.log(transferInfo);
+        let inOrOutputs = await mutiInputsOrOutputs(transferInfo, balanceInfo.data, 11);
+        //console.log(inOrOutputs);
         let tAssemble = [];//交易组装
         let txhex = "";//交易签名
         if (inOrOutputs.success) {
           let txData = {
-            address: address,
+            address: addressInfo.address,
             chainInfo: chainInfo,
             assetInfo: assetInfo
           };
+          //console.log(txData);
           tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
           //获取手续费
           let newFee = countFee(tAssemble, 1);
           //手续费大于0.001的时候重新组装交易及签名
           if (transferInfo.fee !== newFee) {
             transferInfo.fee = newFee;
-            inOrOutputs = await mutiInputsOrOutputs(transferInfo, balanceInfo, 11);
+            inOrOutputs = await mutiInputsOrOutputs(transferInfo, balanceInfo.data, 11);
             tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
-            txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
+            txhex = await nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
           } else {
-            txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
+            txhex = await nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
           }
         } else {
-          console.log(inOrOutputs.data);
-          return;
+          return {success: false, data: inOrOutputs.data};
         }
-        console.log(txhex);
+        return {success: true, data: txhex};
       },
 
       /**
@@ -1005,14 +1007,13 @@
           let amount = timesDecimals(200);
           let remark = '';
           let newTxhex = '';
-          if (this.isPartake === '1') {
-            console.log("跨链");
+          if (this.isPartake) {
             let chainInfo = {
               chainId: this.infoForm.chainId,
               addressType: "1", //1 使用NULS框架构建的链 生态内，2生态外"
               chainName: this.infoForm.name,
               addressPrefix: this.infoForm.prefix,
-              magicNumber: JSON.stringify(this.infoForm.desc).magicNumber,
+              magicNumber: JSON.parse(this.infoForm.desc).magicNumber,
               supportInflowAsset: true,
               verifierList: this.seedForm.seedList,
               minAvailableNodeNum: 3,
@@ -1026,13 +1027,13 @@
               initNumber: this.infoForm.amount,
               decimalPlaces: this.infoForm.decimals
             };
-            this.registerChainAndAsset(MAIN_INFO, isPassword, chainInfo, assetInfo);
+            newTxhex = await this.registerChainAndAsset(MAIN_INFO, isPassword, chainInfo, assetInfo);
           } else {
             newTxhex = await  transferTransaction(isPassword.pri, isPassword.pub, isPassword.address, this.destroyAddress, MAIN_INFO.chainId, MAIN_INFO.assetsId, amount, remark);
           }
           console.log(newTxhex);
-          /*if (!newTxhex.success) {
-            this.$message({message: '搭建链转账错误:' + newTxhex.data, type: 'error', duration: 3000});
+          if (!newTxhex.success) {
+            this.$message({message: '搭建链交易签名错误:' + newTxhex.data, type: 'error', duration: 3000});
             return
           }
           let newHash = await validateAndBroadcast(newTxhex.data);
@@ -1041,7 +1042,7 @@
             this.$message({message: '搭建链转账验证广播交易错误:' + newTxhex.data, type: 'error', duration: 3000});
             return
           }
-          this.submintOrder(newHash.hash);*/
+          this.submintOrder(newHash.hash);
         }
       },
 
