@@ -36,12 +36,15 @@
 
       </div>
     </div>
+    <Password ref="password" @passwordSubmit="passSubmit">
+    </Password>
     <div class="cb"></div>
   </div>
 </template>
 
 <script>
-  import {connect} from '@/api/util'
+  import Password from '@/components/PasswordBar'
+  import {connect,passwordVerification} from '@/api/util'
   import logoBeta from '@/assets/img/logo-beta.svg'
   import logo from '@/assets/img/logo.svg'
   import {RUN_DEV} from '@/config'
@@ -83,6 +86,9 @@
         this.getBestBlockHeader()
       }, 10000)
     },
+    components: {
+      Password,
+    },
     methods: {
 
       /**
@@ -123,16 +129,34 @@
        */
       signOut() {
         this.$confirm(this.$t('tips.tips30'), this.$t('tips.tips29'), {
-          confirmButtonText: this.$t('public.confirm'),
-          cancelButtonText: this.$t('public.cancel'),
-          type: 'warning'
+          confirmButtonText: this.$t('nav.backup'),
+          cancelButtonText: this.$t('nav.signOut'),
+          type: 'warning',
+          showClose: false,
+          closeOnClickModal: false,
+          closeOnPressEscape: false,
+          center: true
         }).then(() => {
+          this.toUrl('backupsAddress');
+        }).catch(() => {
+          this.$refs.password.showPassword(true);
+        });
+      },
+
+      /**
+       *  获取密码框的密码
+       * @param password
+       **/
+      async passSubmit(password) {
+        let isPassword = await passwordVerification(this.accountInfo, password);
+        if (isPassword.success) {
           localStorage.removeItem('accountInfo');
           this.accountInfo = {};
           this.accountAddress = '';
-          this.toUrl('newAddress')
-        }).catch(() => {
-        });
+          this.toUrl('newAddress');
+        } else {
+          this.$message({message: this.$t('tips.tips4'), type: 'error', duration: 3000});
+        }
       },
 
       /**
@@ -251,6 +275,18 @@
         text-align: center;
         z-index: 99;
         position: relative;
+      }
+    }
+    .password-dialog {
+      line-height: 20px;
+    }
+  }
+  .el-message-box__wrapper {
+    .el-message-box__content {
+      .el-message-box__message {
+        p {
+          color: red;
+        }
       }
     }
   }

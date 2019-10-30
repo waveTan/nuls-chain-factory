@@ -31,7 +31,7 @@ export const API_COFIG = {
   "nodeMaxOut": 50,//最大被动连接数，取值0-1000
   "syncBlockCount": 10, //最大主动连接数，取值0-1000
   "networkPort": 18001,//节点网络端口号，取值1-65535
-  "magicNumber": 89898989,//网络魔法参数
+  "magicNumber": 100,//网络魔法参数
   "inflationAmount": "500000000000000",//初始通胀金额
   "totalInflationAmount":"5000000000000000", //默认资产最终通货总额
   "initTime": 1563951658, //通胀开始计算时间(单位:S)

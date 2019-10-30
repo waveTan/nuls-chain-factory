@@ -67,7 +67,7 @@ const en = {
     "tips26": "Entrustment cannot be empty",
     "tips27": "Please enter up to eight decimal places of the correct number of entrustments",
     "tips28": "Number of minimum mortgage NULS: ",
-    "tips29": "Tips",
+    "tips29": "Safety warning",
     "tips30": "After you log out, your account will be deleted. Please make sure you have backed up your private key or Keystore",
     "tips31": "Sorry, your balance is insufficient.",
     "tips": "",

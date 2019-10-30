@@ -215,7 +215,7 @@
                   <font class="fl"><img :src="infoForm.logoUrl"/></font>
                 </p>
                 <p class="cb"><span class="fl">链名称</span><font class="fl">{{infoForm.name}}</font></p>
-                <p class="cb"><span class="fl">地址前缀</span><font class="fl">{{infoForm.prefix}}</font></p>
+                <p class="cb"><span class="fl">地址前缀</span><font class="fl">{{infoForm.prefix.toUpperCase()}}</font></p>
                 <p class="cb"><span class="fl">通证名称</span><font class="fl">{{infoForm.symbol}}</font></p>
                 <p class="cb"><span class="fl">精度</span><font class="fl">{{infoForm.decimals}}</font></p>
                 <p class="cb"><span class="fl">总发行量</span><font class="fl">{{infoForm.total}}</font></p>
@@ -450,7 +450,7 @@
 
         //基本信息表单
         infoForm: {
-          name: '',
+          name: 'wave',
           logoUrl: '',
           prefix: '',
           symbol: '',
@@ -553,6 +553,11 @@
       this.getDestroyAddress();
     },
     mounted() {
+      setInterval(() => {
+        if (this.packingState === 3 || this.packingState === 1) {
+          this.getAccount(this.accountInfo.address);
+        }
+      }, 60000);
     },
     methods: {
 
@@ -642,7 +647,7 @@
               }
               this.infoForm.name = res.data.result.chainName;
               this.infoForm.logoUrl = res.data.result.logo;
-              this.infoForm.prefix = res.data.result.prefix;
+              this.infoForm.prefix = res.data.result.prefix.toUpperCase();
               this.infoForm.chainId = res.data.result.chainId;
               let newAssetInfo = res.data.result.assetInfo;
               this.infoForm.symbol = newAssetInfo.symbol;
@@ -710,7 +715,7 @@
               "address": this.accountInfo.address,
               "chainName": this.infoForm.name,
               "type": Number(this.isSteps),
-              "prefix": this.infoForm.prefix,
+              "prefix": this.infoForm.prefix.toUpperCase(),
               "logo": this.infoForm.logoUrl,
               "payTimes": 0,
               "nodeCount": 0,
@@ -735,10 +740,9 @@
                 "deflationTimeInterval": this.infoForm.intervalTime * 86400 //时间:秒
               }
             };
-            console.log(data);
             try {
               let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
-              console.log(res);
+              //console.log(res);
               if (res.data.success) {
                 this.getAccount(this.accountInfo.address);
                 this.activeName = 'third';
@@ -789,7 +793,7 @@
 
       //添加创世块
       addDomain() {
-        let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix);
+        let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix.toUpperCase());
         this.nodeForm.addressList.push(
           {
             address: newAddressInfo.address,
@@ -863,10 +867,13 @@
 
       //添加种子节点
       addSeedDomain() {
-        let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix);
+        let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix.toUpperCase());
+        //console.log(newAddressInfo);
         this.seedForm.seedList.push(
           {
             address: newAddressInfo.address,
+            pri: newAddressInfo.pri,
+            pub: newAddressInfo.pub,
             ip: "127.0.0.1",
           }
         );
@@ -1028,7 +1035,7 @@
               chainId: this.infoForm.chainId,
               addressType: "1", //1 使用NULS框架构建的链 生态内，2生态外"
               chainName: this.infoForm.name,
-              addressPrefix: this.infoForm.prefix,
+              addressPrefix: this.infoForm.prefix.toUpperCase(),
               magicNumber: JSON.parse(this.infoForm.desc).magicNumber,
               supportInflowAsset: true,
               verifierList: this.seedForm.seedList,
@@ -1053,9 +1060,9 @@
             return
           }
           let newHash = await validateAndBroadcast(newTxhex.data);
-          //console.log(newHash);
+          console.log(newHash);
           if (!newHash.success) {
-            this.$message({message: '搭建链转账验证广播交易错误:' + newTxhex.data, type: 'error', duration: 3000});
+            this.$message({message: '搭建链转账验证广播交易错误:' + JSON.stringify(newHash.data), type: 'error', duration: 3000});
             return
           }
           this.submintOrder(newHash.hash);
@@ -1079,6 +1086,7 @@
           let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
           if (res.data.success) {
             this.getAccount(this.accountInfo.address);
+            this.activeName = 'first';
           } else {
             this.$message({message: '提交订单错误', type: 'error', duration: 3000});
           }

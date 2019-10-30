@@ -2,8 +2,8 @@
   <div class="user bg-gray bg-white">
     <div class="bg-white user-info">
       <div class="w1200 balance">
-        <span>账户: {{accountAddress.address}}</span>&nbsp;&nbsp;
-        <font class="fr">余额: {{accountAddress.balance}} <font class="fCN">NULS</font></font>
+        <span>账户: {{accountAddress.address}}</span>
+        <font class="fr">余额: {{Number(accountAddress.balance).toFixed(3)}} <font class="fCN">NULS</font></font>
       </div>
       <div class="cb"></div>
       <div class="bg-white w1200 user-bottom" v-show="packingState !== 0">

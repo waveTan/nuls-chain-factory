@@ -16,11 +16,11 @@ export const API_BURNING_ADDRESS_PUB = '0000000000000000000000000000000000000000
 //链前缀
 export const API_PREFIX = 'tNULS';
 //网络数据api
-export let API_URL = IS_DEV ? 'http://192.168.1.160:18003/' : 'http://192.168.1.160:18003/';
+export let API_URL = IS_DEV ? 'http://192.168.1.121:18003/' : 'http://192.168.1.160:18003/';
 //接口数据api
-export let API_DATA_URL = IS_DEV ? 'http://192.168.1.160:8080/' : 'http://192.168.1.160:8080/';
+export let API_DATA_URL = IS_DEV ? 'http://192.168.1.121:8080/' : 'http://192.168.1.160:8080/';
 //下载地址api
-export let API_DOWNLOAD_URL = IS_DEV ? 'http://192.168.1.160:8083' : 'http://192.168.1.160:8083';
+export let API_DOWNLOAD_URL = IS_DEV ? 'http://192.168.1.121:8083' : 'http://192.168.1.160:8083';
 //请求最迟时间
 export const API_TIME = '8000';
 //浏览器连接地址
@@ -33,7 +33,7 @@ export const API_COFIG = {
   "nodeMaxOut": 50,//最大被动连接数，取值0-1000
   "syncBlockCount": 10, //最大主动连接数，取值0-1000
   "networkPort": 18001,//节点网络端口号，取值1-65535
-  "magicNumber": 89898989,//网络魔法参数
+  "magicNumber": 100,//网络魔法参数
   "inflationAmount": "500000000000000",//初始通胀金额
   "totalInflationAmount": "5000000000000000", //默认资产最终通货总额
   "initTime": 1563951658, //通胀开始计算时间(单位:S)
