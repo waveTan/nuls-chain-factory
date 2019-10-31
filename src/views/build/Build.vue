@@ -63,7 +63,7 @@
                 <UploadBar :imgUrl="infoForm.logoUrl" @func="getMsgFormSon"></UploadBar>
               </el-form-item>
               <el-form-item label="地址前缀" prop="prefix">
-                <el-input v-model="infoForm.prefix"></el-input>
+                <el-input v-model="prefixToUpperCase"></el-input>
               </el-form-item>
               <el-form-item label="通证简称" prop="symbol">
                 <el-input v-model="infoForm.symbol"></el-input>
@@ -96,10 +96,11 @@
                 <el-input v-model="infoForm.intervalTime" placeholder="通缩间隔时间">
                 </el-input>
               </el-form-item>
-              <el-form-item label="高级">
+              <el-form-item label="高级" v-show="false">
                 <el-switch v-model="infoForm.senior"></el-switch>
               </el-form-item>
-              <el-form-item label="" v-show="infoForm.senior">
+              <!--<el-form-item label="" v-show="infoForm.senior">-->
+              <el-form-item label="" v-show="false">
                 <el-input type="textarea" :rows="5" v-model="infoForm.desc"></el-input>
               </el-form-item>
               <el-form-item class="tc">
@@ -129,7 +130,8 @@
                     <el-input type="number" v-model.number="domain.coins"></el-input>
                   </el-form-item>
                   <el-form-item label="锁定时间" class="time fr">
-                    <el-date-picker v-model="domain.lockTime" type="datetime" placeholder="选择日期时间"
+                    <el-date-picker v-model="domain.lockTime" value-format="timestamp" type="datetime"
+                                    placeholder="选择日期时间"
                                     default-time="12:00:00">
                     </el-date-picker>
                   </el-form-item>
@@ -221,7 +223,9 @@
                 <p class="cb"><span class="fl">总发行量</span><font class="fl">{{infoForm.total}}</font></p>
               </div>
 
-              <div class="title bg-gray">创世块</div>
+              <div class="title bg-gray">
+                创世块 <span class="yellow font12" v-show="nodeForm.addressList.length===0">(请配置创世块)</span>
+              </div>
               <div class="infos node-infos">
                 <ul>
                   <li class="titles">
@@ -235,7 +239,10 @@
                 </ul>
               </div>
 
-              <div class="title bg-gray">种子节点</div>
+              <div class="title bg-gray">
+                种子节点
+                <span class="yellow font12" v-show="seedForm.seedList.length ===0">(请配置种子节点)</span>
+              </div>
               <div class="infos node-infos">
                 <ul>
                   <li class="titles">
@@ -342,7 +349,7 @@
   import nuls from 'nuls-sdk-js'
   import axios from 'axios'
   import {MAIN_INFO, API_PREFIX, API_COFIG, API_DATA_URL, API_DOWNLOAD_URL, API_BURNING_ADDRESS_PUB} from '@/config'
-  import {timesDecimals, divisionDecimals, switchMsec, passwordVerification} from '@/api/util'
+  import {timesDecimals, divisionDecimals, switchMsec, passwordVerification, stringLength} from '@/api/util'
   import {
     transferTransaction,
     validateAndBroadcast,
@@ -355,14 +362,19 @@
 
   export default {
     data() {
-      let validateName = (rule, value, callback) => {
+      let validateName = async (rule, value, callback) => {
+        const regular = /^[a-zA-Z0-9_]{3,30}$/;
         if (value === '') {
           callback(new Error('请输入链名称'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('链名称长度为3-30英文加数字'));
         } else {
-          /*if (this.infoForm.logoUrl !== '') {
-            this.$refs.ruleForm.validateField('logoUrl');
-          }*/
-          callback();
+          let availabilityChangeName = await this.changeName(value, this.infoForm.chainId ? this.infoForm.chainId : 0);
+          if (availabilityChangeName.success) {
+            callback();
+          } else {
+            callback(new Error('链名称已经被占用，请更换'));
+          }
         }
       };
       let validateLogo = (rule, value, callback) => {
@@ -373,57 +385,81 @@
         }
       };
       let validatePrefix = (rule, value, callback) => {
+        const regular = /^[a-zA-Z_]{1,5}$/;
         if (value === '') {
           callback(new Error('请输入地址前缀'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('地址前缀长度为1-5英文'));
         } else {
           callback();
         }
       };
       let validateSymbol = (rule, value, callback) => {
+        const regular = /^[a-zA-Z_]{2,10}$/;
         if (!value) {
           return callback(new Error('请输入通证简称'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('通证简称长度为2-10英文'));
         } else {
           callback();
         }
       };
       let validateTotal = (rule, value, callback) => {
+        const regular = /^[1-9]\d*$/;
         if (!value) {
           return callback(new Error('请输入发行总量'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('发行总量大于0的正整数'));
         } else {
           callback();
         }
       };
       let validateDecimals = (rule, value, callback) => {
+        const regular = /^([0-9]|16)$/;
         if (!value) {
           return callback(new Error('请输入精度系数'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('精度系数为0-16的正整数'));
         } else {
           callback();
         }
       };
       let validateAmount = (rule, value, callback) => {
+        const regular = /^[1-9]\d*$/;
         if (!value) {
           return callback(new Error('请输入通货膨胀金额'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('通货膨胀金额大于0的正整数'));
         } else {
           callback();
         }
       };
       let validateTotalAmount = (rule, value, callback) => {
+        const regular = /^[1-9]\d*$/;
         if (!value) {
           return callback(new Error('请输入总通货膨胀金额'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('总通货膨胀金额大于0的正整数'));
         } else {
           callback();
         }
       };
       let validateIntervalTime = (rule, value, callback) => {
+        const regular = /^[1-9]\d*$/;
         if (!value) {
-          return callback(new Error('请选择开始时间'));
+          return callback(new Error('请输入间隔时间'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('间隔时间大于0的正整数'));
         } else {
           callback();
         }
       };
       let validateProportion = (rule, value, callback) => {
+        const regular = /^([1-9][0-9]{0,1}|100)$/;
         if (!value) {
           return callback(new Error('请输入通缩比例'));
+        } else if (!regular.exec(value)) {
+          callback(new Error('通缩比例1-100的正整数'));
         } else {
           callback();
         }
@@ -450,7 +486,7 @@
 
         //基本信息表单
         infoForm: {
-          name: 'wave',
+          name: '',
           logoUrl: '',
           prefix: '',
           symbol: '',
@@ -499,6 +535,8 @@
             {validator: validateStartTime, trigger: 'blur'},
           ],
         },
+        infoFormOld: {},//旧的基本信息
+        infoFormChange: false,//判断基本信息是否有改变
 
         //创世块表单
         nodeForm: {
@@ -545,7 +583,46 @@
       Password,
       UploadBar
     },
-    watch: {},
+    computed: {
+      prefixToUpperCase: {
+        get: function () {
+          return this.infoForm.prefix;
+        },
+        set: function (val) {
+          this.infoForm.prefix = val.toUpperCase();
+        }
+      }
+    },
+    watch: {
+      'infoForm.name'(newVal) {
+        if (newVal !== this.infoFormOld.chainName) {
+          this.infoFormChange = true;
+        }
+      },
+      'infoForm.prefix'(newVal) {
+        if (newVal !== this.infoFormOld.prefix) {
+          this.infoFormChange = true;
+        }
+      },
+      'infoForm.symbol'(newVal) {
+        let newAssetInfo = this.infoFormOld.assetInfo;
+        if (newVal !== newAssetInfo.symbol) {
+          this.infoFormChange = true;
+        }
+      },
+      'infoForm.total'(newVal) {
+        let newAssetInfo = this.infoFormOld.assetInfo;
+        if (newVal !== divisionDecimals(newAssetInfo.initCoins, newAssetInfo.decimals)) {
+          this.infoFormChange = true;
+        }
+      },
+      'infoForm.decimals'(newVal) {
+        let newAssetInfo = this.infoFormOld.assetInfo;
+        if (newVal !== newAssetInfo.decimals) {
+          this.infoFormChange = true;
+        }
+      },
+    },
     created() {
       if (this.accountInfo.address) {
         this.getAccount(this.accountInfo.address);
@@ -568,15 +645,19 @@
        */
       handleClick(tab) {
         if (tab.name === 'third') {
+          this.nodeForm.addressList = this.infoFormOld.genesisInfo ? JSON.parse(this.infoFormOld.genesisInfo) : [];
           if (this.nodeForm.addressList.length === 0) {
             this.addDomain();
           }
         } else if (tab.name === 'fourth') {
+          this.seedForm.seedList = this.infoFormOld.seeds ? JSON.parse(this.infoFormOld.seeds) : [];
           if (this.seedForm.seedList.length === 0) {
             this.addSeedDomain();
           }
         } else if (tab.name === 'five') {
           this.getDestroyAddress();
+          this.nodeForm.addressList = this.infoFormOld.genesisInfo ? JSON.parse(this.infoFormOld.genesisInfo) : [];
+          this.seedForm.seedList = this.infoFormOld.seeds ? JSON.parse(this.infoFormOld.seeds) : [];
           if (this.nodeForm.addressList.length > 0 && this.seedForm.seedList.length > 0) {
             this.isSubmit = false;
           }
@@ -603,17 +684,27 @@
       },
 
       /**
-       * 验证名称
-       **/
-      async changeName() {
-        console.log(this.infoForm.name);
-        await this.$post('/chain/check', {'chainId': '2', 'address': 'tNULSeBaMvH8TmMZUPQKvc19qeLrD7oN643aBL'})
-          .then((response) => {
-            console.log(response);
-          })
-          .catch((error) => {
-            console.log(error);
-          });
+       * @disc: 检查chainName是否被占用
+       * @params: chainName 链名称
+       * @params: chainId 链ID
+       * @date: 2019-10-30 17:52
+       * @author: Wave
+       */
+      async changeName(chainName, chainId) {
+        const url = API_DATA_URL + 'chain/name/check';
+        const data = {"chainName": chainName, chainId: chainId};
+        try {
+          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          //console.log(res.data);
+          if (res.data.success) {
+            return {success: true}
+          } else {
+            return {success: false}
+          }
+        } catch (err) {
+          console.log(err);
+          return {success: false}
+        }
       },
 
       /**
@@ -641,6 +732,7 @@
               this.packingState = 0;
               this.activeName = 'first';
             } else {
+              this.infoFormOld = res.data.result;
               this.packingState = res.data.result.status;
               if (this.packingState === 5) {
                 this.getDownloadByChainid(res.data.result.chainId);
@@ -687,7 +779,8 @@
       async getDownloadByChainid(chainId) {
         const url = API_DATA_URL + 'chain/get/download/' + chainId;
         try {
-          let res = await axios.post(url);
+          let res = await
+            axios.post(url);
           //console.log(res.data);
           if (res.data.success) {
             this.downloadList.walletUrl = API_DOWNLOAD_URL + res.data.result.wallet;
@@ -705,60 +798,83 @@
        * @params: formName
        * @date: 2019-10-16 15:39
        * @author: Wave
-       */
+       **/
       async infoSubmitForm(formName) {
         this.$refs[formName].validate(async (valid) => {
           if (valid) {
-            const url = API_DATA_URL + 'chain/info/base/save';
-            const data = {
-              "chainId": this.infoForm.chainId ? this.infoForm.chainId : 0,
-              "address": this.accountInfo.address,
-              "chainName": this.infoForm.name,
-              "type": Number(this.isSteps),
-              "prefix": this.infoForm.prefix.toUpperCase(),
-              "logo": this.infoForm.logoUrl,
-              "payTimes": 0,
-              "nodeCount": 0,
-              "payAmount": 0,
-              "asset": {
-                "assetName": this.infoForm.name,
-                "symbol": this.infoForm.symbol,
-                "initCoins": timesDecimals(this.infoForm.total, this.infoForm.decimals),
-                "decimals": this.infoForm.decimals
-              },
-              "config": {
-                "packingInterval": JSON.parse(this.infoForm.desc).packingInterval,
-                "nodeMaxIn": JSON.parse(this.infoForm.desc).nodeMaxIn,
-                "nodeMaxOut": JSON.parse(this.infoForm.desc).nodeMaxOut,
-                "syncBlockCount": JSON.parse(this.infoForm.desc).syncBlockCount,
-                "networkPort": JSON.parse(this.infoForm.desc).networkPort,
-                "magicNumber": JSON.parse(this.infoForm.desc).magicNumber === 100 ? Math.floor(Math.random() * 100000000) : JSON.parse(this.infoForm.desc).magicNumber,
-                "inflationAmount": timesDecimals(this.infoForm.amount, this.infoForm.decimals),
-                "totalInflationAmount": timesDecimals(this.infoForm.totalAmount, this.infoForm.decimals),
-                "initTime": switchMsec(this.infoForm.startTime) / 1000, //时间挫
-                "deflationRatio": this.infoForm.proportion,
-                "deflationTimeInterval": this.infoForm.intervalTime * 86400 //时间:秒
-              }
-            };
-            try {
-              let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
-              //console.log(res);
-              if (res.data.success) {
+            if (this.infoFormChange) {
+              this.$confirm('链基本信息发生改变，创世块及种子节点将被重置', '提示', {
+                confirmButtonText: '确定修改',
+                cancelButtonText: '取消修改',
+                type: 'warning'
+              }).then(() => {
+                this.chainInfoBaseSave();
+                this.nodeForm.addressList = [];
+                this.seedForm.seedList = [];
+              }).catch(() => {
                 this.getAccount(this.accountInfo.address);
-                this.activeName = 'third';
-                if (this.nodeForm.addressList.length === 0) {
-                  this.addDomain();
-                }
-              } else {
-                this.$message({message: '基本信息提交错误:' + JSON.parse(res.data.error), type: 'error', duration: 3000});
-              }
-            } catch (err) {
-              this.$message({message: '基本信息提交异常:' + JSON.parse(err), type: 'error', duration: 3000});
+              });
+            } else {
+              this.chainInfoBaseSave();
             }
           } else {
             return false;
           }
         });
+      },
+
+      /**
+       * @disc: 提交基本信息具体方法
+       * @date: ] 16:46
+       * @author: Wave
+       */
+      async chainInfoBaseSave() {
+        const url = API_DATA_URL + 'chain/info/base/save';
+        const data = {
+          "chainId": this.infoForm.chainId ? this.infoForm.chainId : 0,
+          "address": this.accountInfo.address,
+          "chainName": this.infoForm.name,
+          "type": Number(this.isSteps),
+          "prefix": this.infoForm.prefix.toUpperCase(),
+          "logo": this.infoForm.logoUrl,
+          "payTimes": 0,
+          "nodeCount": 0,
+          "payAmount": 0,
+          "asset": {
+            "assetName": this.infoForm.name,
+            "symbol": this.infoForm.symbol,
+            "initCoins": timesDecimals(this.infoForm.total, this.infoForm.decimals),
+            "decimals": this.infoForm.decimals
+          },
+          "config": {
+            "packingInterval": JSON.parse(this.infoForm.desc).packingInterval,
+            "nodeMaxIn": JSON.parse(this.infoForm.desc).nodeMaxIn,
+            "nodeMaxOut": JSON.parse(this.infoForm.desc).nodeMaxOut,
+            "syncBlockCount": JSON.parse(this.infoForm.desc).syncBlockCount,
+            "networkPort": JSON.parse(this.infoForm.desc).networkPort,
+            "magicNumber": JSON.parse(this.infoForm.desc).magicNumber === 100 ? Math.floor(Math.random() * 100000000) : JSON.parse(this.infoForm.desc).magicNumber,
+            "inflationAmount": timesDecimals(this.infoForm.amount, this.infoForm.decimals),
+            "totalInflationAmount": timesDecimals(this.infoForm.totalAmount, this.infoForm.decimals),
+            "initTime": switchMsec(this.infoForm.startTime) / 1000, //时间挫
+            "deflationRatio": this.infoForm.proportion,
+            "deflationTimeInterval": this.infoForm.intervalTime * 86400 //时间:秒
+          }
+        };
+        try {
+          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          //console.log(res);
+          if (res.data.success) {
+            this.getAccount(this.accountInfo.address);
+            this.activeName = 'third';
+            if (this.nodeForm.addressList.length === 0) {
+              this.addDomain();
+            }
+          } else {
+            this.$message({message: '基本信息提交错误:' + JSON.stringify(res.data.error), type: 'error', duration: 3000});
+          }
+        } catch (err) {
+          this.$message({message: '基本信息提交异常:' + JSON.stringify(err), type: 'error', duration: 3000});
+        }
       },
 
       /**
@@ -829,7 +945,7 @@
        * @author: Wave
        */
       async submintNodeInfo() {
-        const url = API_DATA_URL + '/chain/info/genesis/save';
+        const url = API_DATA_URL + 'chain/info/genesis/save';
         let newNodeList = [];
         for (let item of this.nodeForm.addressList) {
           let {pri, ...personUnknowPri} = item;
@@ -840,8 +956,10 @@
           "address": this.accountInfo.address,
           "genesisInfo": newNodeList
         };
+        //console.log(url, data);
         try {
-          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          let res = await
+            axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
           //console.log(res.data);
           if (res.data.success) {
             this.getAccount(this.accountInfo.address);
@@ -909,7 +1027,8 @@
           "seeds": newSeedList
         };
         try {
-          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          let res = await
+            axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
           //console.log(res.data);
           if (res.data.success) {
             this.getAccount(this.accountInfo.address);
@@ -933,7 +1052,8 @@
       async getDestroyAddress() {
         const url = API_DATA_URL + 'account/get/normal/destroyAddress';
         try {
-          let res = await axios.get(url);
+          let res = await
+            axios.get(url);
           //console.log(res.data);
           if (res.data.success) {
             this.destroyAddress = res.data.result.address
@@ -964,7 +1084,8 @@
        * @author: Wave
        */
       async registerChainAndAsset(mainInfo, addressInfo, chainInfo, assetInfo) {
-        const balanceInfo = await getBalanceOrNonceByAddress(mainInfo.chainId, mainInfo.assetsId, addressInfo.address);
+        const balanceInfo = await
+          getBalanceOrNonceByAddress(mainInfo.chainId, mainInfo.assetsId, addressInfo.address);
 
         if (!balanceInfo.success) {
           console.log("获取账户余额错误:" + balanceInfo.data);
@@ -989,7 +1110,8 @@
           }]
         };
         //console.log(transferInfo);
-        let inOrOutputs = await mutiInputsOrOutputs(transferInfo, balanceInfo.data, 11);
+        let inOrOutputs = await
+          mutiInputsOrOutputs(transferInfo, balanceInfo.data, 11);
         //console.log(inOrOutputs);
         let tAssemble = [];//交易组装
         let txhex = "";//交易签名
@@ -1000,17 +1122,22 @@
             assetInfo: assetInfo
           };
           //console.log(txData);
-          tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
+          tAssemble = await
+            nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
           //获取手续费
           let newFee = countFee(tAssemble, 1);
           //手续费大于0.001的时候重新组装交易及签名
           if (transferInfo.fee !== newFee) {
             transferInfo.fee = newFee;
-            inOrOutputs = await mutiInputsOrOutputs(transferInfo, balanceInfo.data, 11);
-            tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
-            txhex = await nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
+            inOrOutputs = await
+              mutiInputsOrOutputs(transferInfo, balanceInfo.data, 11);
+            tAssemble = await
+              nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
+            txhex = await
+              nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
           } else {
-            txhex = await nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
+            txhex = await
+              nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
           }
         } else {
           return {success: false, data: inOrOutputs.data};
@@ -1050,16 +1177,19 @@
               initNumber: this.infoForm.amount,
               decimalPlaces: this.infoForm.decimals
             };
-            newTxhex = await this.registerChainAndAsset(MAIN_INFO, isPassword, chainInfo, assetInfo);
+            newTxhex = await
+              this.registerChainAndAsset(MAIN_INFO, isPassword, chainInfo, assetInfo);
           } else {
-            newTxhex = await  transferTransaction(isPassword.pri, isPassword.pub, isPassword.address, this.destroyAddress, MAIN_INFO.chainId, MAIN_INFO.assetsId, amount, remark);
+            newTxhex = await
+              transferTransaction(isPassword.pri, isPassword.pub, isPassword.address, this.destroyAddress, MAIN_INFO.chainId, MAIN_INFO.assetsId, amount, remark);
           }
           console.log(newTxhex);
           if (!newTxhex.success) {
             this.$message({message: '搭建链交易签名错误:' + newTxhex.data, type: 'error', duration: 3000});
             return
           }
-          let newHash = await validateAndBroadcast(newTxhex.data);
+          let newHash = await
+            validateAndBroadcast(newTxhex.data);
           console.log(newHash);
           if (!newHash.success) {
             this.$message({message: '搭建链转账验证广播交易错误:' + JSON.stringify(newHash.data), type: 'error', duration: 3000});
@@ -1083,7 +1213,8 @@
           "txHash": txHash
         };
         try {
-          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          let res = await
+            axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
           if (res.data.success) {
             this.getAccount(this.accountInfo.address);
             this.activeName = 'first';
@@ -1468,7 +1599,7 @@
                 padding: 0 0 0 40px;
                 span {
                   display: block;
-                  width: 360px;
+                  width: 460px;
 
                 }
                 font {

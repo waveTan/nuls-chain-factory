@@ -32,7 +32,7 @@ export const API_COFIG = {
   "nodeMaxIn": 20,//每次同步块数，取值1-1000
   "nodeMaxOut": 50,//最大被动连接数，取值0-1000
   "syncBlockCount": 10, //最大主动连接数，取值0-1000
-  "networkPort": 18001,//节点网络端口号，取值1-65535
+  "networkPort": 8001,//节点网络端口号，取值1-65535
   "magicNumber": 100,//网络魔法参数
   "inflationAmount": "500000000000000",//初始通胀金额
   "totalInflationAmount": "5000000000000000", //默认资产最终通货总额

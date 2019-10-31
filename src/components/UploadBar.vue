@@ -36,11 +36,27 @@
         this.url = this.imgUrl;
       }
     },
+    watch:{   // 使用监听的方式，监听数据的变化
+      imgUrl(val){
+        this.list = val;
+        this.url =val;
+      }
+    },
     methods: {
+      /**
+       * @disc: 点击上传
+       * @date: 2019-10-31 14:56
+       * @author: Wave
+       */
       upload() {
         document.getElementById(this.uploadId).click()
       },
 
+      /**
+       * @disc: 上传文件方法
+       * @date: 2019-10-31 14:56
+       * @author: Wave
+       */
       doUpload() {
         const _this = this;
         axios.get('http://192.168.1.121:8080/oss').then((result) => {
