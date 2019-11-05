@@ -249,7 +249,7 @@
               this.$message({
                 message: this.$t('tips.tips5') + addressInfo.data.error.message,
                 type: 'error',
-                duration: 2000
+                duration: 3000
               });
             }
             this.toUrl('backupsAddress');

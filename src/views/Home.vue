@@ -1,7 +1,11 @@
 <template>
   <div class="home">
     <div class="carousel">
-      <img src="./../assets/img/bank.png"/>
+      <el-carousel :interval="5000" arrow="always" height="400px">
+        <el-carousel-item v-for="item in 4" :key="item">
+          <h3><img src="./../assets/img/bank.png"/></h3>
+        </el-carousel-item>
+      </el-carousel>
     </div>
     <div class="w1200 bg-white">
       <div class="left fl">
@@ -10,7 +14,7 @@
         </p>
         <el-row>
           <el-button>了解区块链架构</el-button>
-          <el-button type="success">前往搭建区块链</el-button>
+          <el-button type="success" @click="toUrl('build')">前往搭建区块链</el-button>
         </el-row>
       </div>
       <div class="right fr">
@@ -27,7 +31,7 @@
             微服务架构，支持根据实际业务定制化开发和现有模块进行结合。
           </p>
           <el-row>
-            <el-button type="success">前往搭建区块链</el-button>
+            <el-button type="success" @click="toUrl('build')">前往搭建区块链</el-button>
           </el-row>
         </div>
       </div>
@@ -46,7 +50,18 @@
     },
     created() {
     },
-    methods: {}
+    methods: {
+
+      /**
+       * 连接跳转
+       * @param name
+       */
+      toUrl(name) {
+        this.$router.push({
+          name: name,
+        })
+      },
+    }
   }
 </script>
 

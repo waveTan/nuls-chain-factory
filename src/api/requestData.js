@@ -1,7 +1,8 @@
 import nuls from 'nuls-sdk-js'
 import axios from 'axios'
 import {post} from './https'
-import {API_DATA_URL} from '@/config'
+import {API_DATA_URL, API_BURNING_ADDRESS_PUB, CONSUME_NULS,API_PREFIX} from '@/config'
+import {timesDecimals,Plus} from './util'
 
 /**
  * 计算手续费
@@ -73,68 +74,37 @@ export async function getBalanceOrNonceByAddress(chainId = 1, assetId = 1, addre
 }
 
 /**
- * 获取inputs 、 outputs
+ * 获取不跨链inputs 、 outputs
  * @param transferInfo
  * @param balanceInfo
- * @param type
  * @returns {*}
  */
-export async function inputsOrOutputs(transferInfo, balanceInfo, type) {
-  let newAmount = transferInfo.amount + transferInfo.fee;
-  let newLocked = 0;
+export async function inputsOrOutputs(transferInfo, balanceInfo) {
+  let newAmount = Number(Plus(transferInfo.amount, transferInfo.fee));
   let newNonce = balanceInfo.nonce;
-  let newoutputAmount = transferInfo.amount;
-  let newLockTime = 0;
-  if (balanceInfo.balance < transferInfo.amount + transferInfo.fee) {
-    return {success: false, data: "Your balance is not enough."}
-  }
-  if (type === 4) {
-    newLockTime = -1;
-  } else if (type === 5) {
-    newLockTime = -1;
-  } else if (type === 6) {
-    newAmount = transferInfo.amount;
-    newLocked = -1;
-    newNonce = transferInfo.depositHash.substring(transferInfo.depositHash.length - 16);
-    newoutputAmount = transferInfo.amount - transferInfo.fee;
-  } else if (type === 9) {
-    newAmount = transferInfo.amount;
-    newLocked = -1;
-    newNonce = transferInfo.depositHash.substring(transferInfo.depositHash.length - 16);
-    newoutputAmount = transferInfo.amount - transferInfo.fee;
-    //锁定三天
-    let times = (new Date()).valueOf() + 3600000 * 72;
-    newLockTime = Number(times.toString().substr(0, times.toString().length - 3));
-  } else {
-    //return {success: false, data: "No transaction type"}
-  }
+  let burnAddress = nuls.getAddressByPub(transferInfo.chainId,transferInfo.assetsId,API_BURNING_ADDRESS_PUB,API_PREFIX);
   let inputs = [{
     address: transferInfo.fromAddress,
-    assetsChainId: transferInfo.assetsChainId,
+    assetsChainId: transferInfo.chainId,
     assetsId: transferInfo.assetsId,
     amount: newAmount,
-    locked: newLocked,
+    locked: 0,
     nonce: newNonce
   }];
-  let outputs = [];
-  if (type === 15 || type === 17) {
-    return {success: true, data: {inputs: inputs, outputs: outputs}};
-  }
-  if (type === 16) {
-    if (!transferInfo.toAddress) {
-      return {success: true, data: {inputs: inputs, outputs: outputs}};
-    } else {
-      newoutputAmount = transferInfo.value;
-    }
-  }
-  outputs = [{
-    address: transferInfo.toAddress ? transferInfo.toAddress : transferInfo.fromAddress,
-    assetsChainId: transferInfo.assetsChainId,
+  let outputs = [{  //1600转账
+    address: transferInfo.toAddress,
+    assetsChainId: transferInfo.chainId,
     assetsId: transferInfo.assetsId,
-    amount: newoutputAmount,
-    lockTime: newLockTime
+    amount: timesDecimals(CONSUME_NULS.make.transfer),
+    lockTime: 0
+  }, {
+    address: burnAddress,
+    assetsChainId: transferInfo.chainId,
+    assetsId: transferInfo.assetsId,
+    amount: timesDecimals(CONSUME_NULS.make.burn),
+    lockTime: 0
   }];
-  /*console.log(inputs);
+ /* console.log(inputs);
   console.log(outputs);*/
   return {success: true, data: {inputs: inputs, outputs: outputs}};
 }
@@ -146,7 +116,7 @@ export async function inputsOrOutputs(transferInfo, balanceInfo, type) {
  * @returns {*}
  */
 export async function mutiInputsOrOutputs(transferInfo, balanceInfo) {
-  let newAmount = transferInfo.from.amount + transferInfo.fee;
+  let newAmount = Number(timesDecimals(transferInfo.from.amount) + transferInfo.fee);
   let newLocked = 0;
   let newNonce = balanceInfo.nonce;
   if (balanceInfo.balance < newAmount) {
@@ -190,7 +160,7 @@ export async function accountRegister(address) {
       return {success: true, data: res.data.result}
     } else {
       //return res.data
-      return {success: false,data:res.data.error}
+      return {success: false, data: res.data.error}
     }
   } catch (err) {
     return {success: false, data: err}
@@ -199,33 +169,15 @@ export async function accountRegister(address) {
 
 /**
  * 转账交易
- * @param pri
- * @param pub
- * @param fromAddress
- * @param toAddress
- * @param chainId
- * @param assetsId
- * @param amount
- * @param remark
+ * @param addressInfo
+ * @param transferInfo
+ * @param balanceInfo
  */
-export async function transferTransaction(pri, pub, fromAddress, toAddress, chainId, assetsId, amount, remark) {
-  const balanceInfo = await getBalanceOrNonceByAddress(chainId, assetsId, fromAddress);
-
-  if (!balanceInfo.success) {
-    return {success: false, data: balanceInfo.data}
-  }
-
-  let transferInfo = {
-    fromAddress: fromAddress,
-    toAddress: toAddress,
-    assetsChainId: chainId,
-    assetsId: assetsId,
-    amount: amount,
-    fee: 100000
-  };
-  let inOrOutputs = await inputsOrOutputs(transferInfo, balanceInfo.data, 2);
+export async function transferTransaction(addressInfo, transferInfo, balanceInfo) {
+  let inOrOutputs = await inputsOrOutputs(transferInfo, balanceInfo.data);
   let tAssemble = [];//交易组装
   let txhex = "";//交易签名
+  let remark = '';
   if (inOrOutputs.success) {
     tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, remark, 2);
     //获取手续费
@@ -233,12 +185,13 @@ export async function transferTransaction(pri, pub, fromAddress, toAddress, chai
     //手续费大于0.001的时候重新组装交易及签名
     if (transferInfo.fee !== newFee) {
       transferInfo.fee = newFee;
-      inOrOutputs = await inputsOrOutputs(transferInfo, balanceInfo.data, 2);
+      inOrOutputs = await inputsOrOutputs(transferInfo, balanceInfo.data);
       tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, remark, 2);
-      txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
+      txhex = await nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
     } else {
-      txhex = await nuls.transactionSerialize(pri, pub, tAssemble);
+      txhex = await nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
     }
+    console.log(inOrOutputs);
   } else {
     return {success: false, data: inOrOutputs.data}
   }
@@ -291,7 +244,7 @@ export async function broadcastTx(txHex) {
 export async function validateAndBroadcast(txHex) {
   return await post('/', 'validateTx', [txHex])
     .then((response) => {
-      console.log(response);
+      //console.log(response);
       if (response.hasOwnProperty("result")) {
         let newHash = response.result.value;
         return post('/', 'broadcastTx', [txHex])

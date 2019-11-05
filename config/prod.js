@@ -24,6 +24,14 @@ export let API_DOWNLOAD_URL = IS_DEV ? 'http://192.168.1.121:8083' : 'http://192
 export const API_TIME = '8000';
 //浏览器连接地址
 export const EXPLORER_URL = IS_DEV ? 'https://nulscan.io/' : 'https://nulscan.io/';
+//造链、跨链消耗nuls数量
+export const CONSUME_NULS = {
+  //造链2000 = 400销毁+1600转账
+  make: {burn: 400, transfer: 1600,total:2000},
+  //跨链1000 = 200销毁+800锁定
+  cross: {burn: 200, locking: 800,total:1000},
+};
+
 //高级配置的默认值
 export const API_COFIG = {
   "packingInterval": 10, //每次出块间隔时间，单位秒，取值5-100w

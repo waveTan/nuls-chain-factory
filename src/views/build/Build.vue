@@ -13,7 +13,8 @@
         <el-tab-pane label="业务场景" name="first">
           <!--选择业务场景-->
           <div class="steps">
-            <div class="steps-scene" :class="isSteps===1 ? 'is-active' : ''" @click="choiceSteps(1)">
+            <div class="steps-scene" style="margin-left: 170px" :class="isSteps===1 ? 'is-active' : ''"
+                 @click="choiceSteps(1)">
               <h6>分布式账本版</h6>
               <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改</p>
               <ul>
@@ -34,7 +35,7 @@
                 <li>社交应用</li>
               </ul>
             </div>
-            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" @click="choiceSteps(3)">
+            <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" @click="choiceSteps(3)" v-show="false">
               <h6>POCM版</h6>
               <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
               <ul>
@@ -62,8 +63,8 @@
               <el-form-item label="链Logo" prop="logoUrl">
                 <UploadBar :imgUrl="infoForm.logoUrl" @func="getMsgFormSon"></UploadBar>
               </el-form-item>
-              <el-form-item label="地址前缀" prop="prefix">
-                <el-input v-model="prefixToUpperCase"></el-input>
+              <el-form-item :label="RUN_DEV ? '地址前缀':'地址前缀(测试网络默认添加TT)'" prop="prefix">
+                <el-input v-model="prefixToUpperCase" maxlength="5"></el-input>
               </el-form-item>
               <el-form-item label="通证简称" prop="symbol">
                 <el-input v-model="infoForm.symbol"></el-input>
@@ -74,7 +75,7 @@
               <el-form-item label="精度" prop="decimals">
                 <el-input v-model="infoForm.decimals"></el-input>
               </el-form-item>
-              <el-form-item label="单次通胀金额" prop="amount">
+              <el-form-item label="初始通胀金额" prop="amount">
                 <el-input v-model="infoForm.amount" placeholder="初始通胀金额">
                 </el-input>
               </el-form-item>
@@ -82,13 +83,13 @@
                 <el-input v-model="infoForm.totalAmount" placeholder="初始通胀金额">
                 </el-input>
               </el-form-item>
-              <el-form-item label="开始时间" prop="startTime">
+              <el-form-item label="通胀开始时间" prop="startTime">
                 <div class="cd time">
                   <el-date-picker v-model="infoForm.startTime" type="datetime" placeholder="通胀开始计算时间">
                   </el-date-picker>
                 </div>
               </el-form-item>
-              <el-form-item label="通缩比例" prop="proportion">
+              <el-form-item label="通缩比例(%)" prop="proportion">
                 <el-input v-model="infoForm.proportion" placeholder="通缩比例">
                 </el-input>
               </el-form-item>
@@ -303,20 +304,20 @@
     <div class="w1200 bg-white bottoms cb" v-show="activeName ==='five'">
       <div class="b-left fl">
         <div class="fl total">
-          <p>总费用: <span class="yellow">{{ isPartake ? 1000: 200}}</span><font class="fCN">&nbsp;NULS</font></p>
+          <p>总费用: <span class="yellow">{{ isPartake ? 3000: 2000}}</span><font class="fCN">&nbsp;NULS</font></p>
         </div>
         <el-popover placement="top" width="320" trigger="click" class="popover">
           <div class="detailed">
             <h6 class="bg-gray">账单明细</h6>
             <p class="cb">
               <u class="fl gray">创建基本信息</u>
-              <span class="fl">{{isPartake ? 0:200 }}</span>
+              <span class="fl">{{CONSUME_NULS.make.total}}</span>
               <font class="fCN">&nbsp;NULS</font>
             </p>
             <p class="cb">
               <el-checkbox v-model="isPartake" class="partake fl"></el-checkbox>
               <u class="fl gray">跨链抵押</u>
-              <span class="fl">{{isPartake? 1000:0 }} </span>
+              <span class="fl">{{isPartake? CONSUME_NULS.cross.total:0 }} </span>
               <font class="fCN">&nbsp;NULS</font>
             </p>
             <!--<p class="cb"><u class="fl gray">运行3个种子节点</u><span class="fl">0.01</span><font class="fCN">&nbsp;NULS</font>
@@ -325,7 +326,7 @@
             </p>-->
             <p class="cb all">
               <u class="fl gray">总计</u>
-              <span class="yellow fl">{{ isPartake ? 1000: 200}}</span>
+              <span class="yellow fl">{{ isPartake ? CONSUME_NULS.make.total+CONSUME_NULS.cross.total:CONSUME_NULS.make.total}}</span>
               <font class="fCN">&nbsp;NULS</font></p>
           </div>
           <el-link :underline="false" type="primary" slot="reference">明细</el-link>
@@ -348,7 +349,16 @@
 <script>
   import nuls from 'nuls-sdk-js'
   import axios from 'axios'
-  import {MAIN_INFO, API_PREFIX, API_COFIG, API_DATA_URL, API_DOWNLOAD_URL, API_BURNING_ADDRESS_PUB} from '@/config'
+  import {
+    MAIN_INFO,
+    API_PREFIX,
+    API_COFIG,
+    API_DATA_URL,
+    API_DOWNLOAD_URL,
+    API_BURNING_ADDRESS_PUB,
+    CONSUME_NULS,
+    RUN_DEV
+  } from '@/config'
   import {timesDecimals, divisionDecimals, switchMsec, passwordVerification, stringLength} from '@/api/util'
   import {
     transferTransaction,
@@ -405,21 +415,21 @@
         }
       };
       let validateTotal = (rule, value, callback) => {
-        const regular = /^[1-9]\d*$/;
+        const regular = /^((?!0)\d{1,15}|100000000000000|0)$/;
         if (!value) {
           return callback(new Error('请输入发行总量'));
         } else if (!regular.exec(value)) {
-          callback(new Error('发行总量大于0的正整数'));
+          callback(new Error('发行总量1-15位正整数'));
         } else {
           callback();
         }
       };
       let validateDecimals = (rule, value, callback) => {
-        const regular = /^([0-9]|16)$/;
+        const regular = /^([0-8]|8)$/;
         if (!value) {
           return callback(new Error('请输入精度系数'));
         } else if (!regular.exec(value)) {
-          callback(new Error('精度系数为0-16的正整数'));
+          callback(new Error('精度系数为0-8的正整数'));
         } else {
           callback();
         }
@@ -480,7 +490,9 @@
       };
 
       return {
+        CONSUME_NULS: CONSUME_NULS,//消耗NULS信息
         accountInfo: localStorage.hasOwnProperty('accountInfo') ? JSON.parse(localStorage.getItem('accountInfo')) : {},//地址信息
+        balanceInfo: {},//账户余额信息
         activeName: 'first',
         isSteps: 1,//业务场景选中模块
 
@@ -577,6 +589,8 @@
           seedNode3: '',
         },
         applyRules: {},
+
+        buildInterval: null,//定时器
       };
     },
     components: {
@@ -589,7 +603,11 @@
           return this.infoForm.prefix;
         },
         set: function (val) {
-          this.infoForm.prefix = val.toUpperCase();
+          let newVal = val;
+          if (!newVal.startsWith('TT') && !RUN_DEV) {
+            newVal = 'TT' + val
+          }
+          this.infoForm.prefix = newVal.toUpperCase();
         }
       }
     },
@@ -630,9 +648,12 @@
       this.getDestroyAddress();
     },
     mounted() {
-      setInterval(() => {
+      this.buildInterval = setInterval(() => {
         if (this.packingState === 3 || this.packingState === 1) {
           this.getAccount(this.accountInfo.address);
+        }
+        if (this.packingState === 2 || this.packingState === 4) {
+          clearInterval(this.buildInterval);
         }
       }, 60000);
     },
@@ -693,6 +714,7 @@
       async changeName(chainName, chainId) {
         const url = API_DATA_URL + 'chain/name/check';
         const data = {"chainName": chainName, chainId: chainId};
+        //console.log(url,data);
         try {
           let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
           //console.log(res.data);
@@ -726,12 +748,13 @@
         const url = API_DATA_URL + '/chain/get/' + address;
         try {
           let res = await axios.post(url);
-          //console.log(res.data);
+          console.log(res.data);
           if (res.data.success) {
             if (!res.data.hasOwnProperty('result')) {
               this.packingState = 0;
               this.activeName = 'first';
             } else {
+              this.isSteps = res.data.result.type;
               this.infoFormOld = res.data.result;
               this.packingState = res.data.result.status;
               if (this.packingState === 5) {
@@ -761,6 +784,16 @@
               this.infoForm.proportion = newConfigInfo.deflationRatio;
               this.infoForm.intervalTime = newConfigInfo.deflationTimeInterval / 86400;
               this.infoForm.desc = res.data.result.configInfo;
+
+              if (res.data.result.status === 1) {
+                const setInterval = setInterval(() => {
+                  this.getAccount(this.accountInfo.address);
+                }, 60000);
+
+                if (res.data.result.status === 2 || res.data.result.status === 4) {
+                  clearInterval(setInterval);
+                }
+              }
             }
           } else {
             this.$message({message: '获取账户信息错误:' + JSON.stringify(res.data.error), type: 'error', duration: 3000});
@@ -843,7 +876,7 @@
           "asset": {
             "assetName": this.infoForm.name,
             "symbol": this.infoForm.symbol,
-            "initCoins": timesDecimals(this.infoForm.total, this.infoForm.decimals),
+            "initCoins": this.infoForm.total.padEnd(Number(this.infoForm.total.length + Number(this.infoForm.decimals)), '0'),
             "decimals": this.infoForm.decimals
           },
           "config": {
@@ -860,6 +893,7 @@
             "deflationTimeInterval": this.infoForm.intervalTime * 86400 //时间:秒
           }
         };
+        //console.log(url, data);
         try {
           let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
           //console.log(res);
@@ -883,6 +917,10 @@
       nodeSubmitForm() {
         let total = 0;
         for (let item of this.nodeForm.addressList) {
+          if (!item.pri) {
+            this.$message({message: '创世块私钥已清空请确认备份完成的或者更换创世块', type: 'error', duration: 3000});
+            return;
+          }
           let reg = /^[0-9]*$/;
           if (!reg.exec(item.coins)) {
             this.$message({message: '请输入有效的整数', type: 'error', duration: 3000});
@@ -899,7 +937,12 @@
         this.backupsDialog = true;
       },
 
-      //移除创世块
+      /**
+       * @disc: 移除创世块
+       * @params: item
+       * @date: 2019-11-01 9:22
+       * @author: Wave
+       */
       removeDomain(item) {
         let index = this.nodeForm.addressList.indexOf(item);
         if (index !== -1) {
@@ -907,7 +950,11 @@
         }
       },
 
-      //添加创世块
+      /**
+       * @disc: 添加创世块
+       * @date: 2019-11-01 9:22
+       * @author: Wave
+       */
       addDomain() {
         let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix.toUpperCase());
         this.nodeForm.addressList.push(
@@ -975,7 +1022,12 @@
         }
       },
 
-      //移除种子节点
+      /**
+       * @disc: 移除种子节点
+       * @params: item
+       * @date: 2019-11-01 9:22
+       * @author: Wave
+       */
       removeSeedDomain(item) {
         let index = this.seedForm.seedList.indexOf(item);
         if (index !== -1) {
@@ -983,7 +1035,11 @@
         }
       },
 
-      //添加种子节点
+      /**
+       * @disc: 添加种子节点
+       * @date: 2019-11-01 9:22
+       * @author: Wave
+       */
       addSeedDomain() {
         let newAddressInfo = nuls.newAddress(this.infoForm.chainId, '', this.infoForm.prefix.toUpperCase());
         //console.log(newAddressInfo);
@@ -1027,8 +1083,7 @@
           "seeds": newSeedList
         };
         try {
-          let res = await
-            axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
+          let res = await axios.post(url, data, {headers: {'Content-Type': 'application/json;charset=utf-8'}});
           //console.log(res.data);
           if (res.data.success) {
             this.getAccount(this.accountInfo.address);
@@ -1037,10 +1092,10 @@
               this.isSubmit = false;
             }
           } else {
-            this.$message({message: '提交共识信息错误', type: 'error', duration: 3000});
+            this.$message({message: '提交种子节点信息错误' + JSON.stringify(res.data), type: 'error', duration: 3000});
           }
         } catch (err) {
-          this.$message({message: '提交共识信息异常:' + err, type: 'error', duration: 3000});
+          this.$message({message: '提交种子节点信息异常:' + err, type: 'error', duration: 3000});
         }
       },
 
@@ -1052,8 +1107,7 @@
       async getDestroyAddress() {
         const url = API_DATA_URL + 'account/get/normal/destroyAddress';
         try {
-          let res = await
-            axios.get(url);
+          let res = await axios.get(url);
           //console.log(res.data);
           if (res.data.success) {
             this.destroyAddress = res.data.result.address
@@ -1068,10 +1122,23 @@
        * @date: 2019-10-16 10:39
        * @author: Wave
        */
-      confirm() {
-        let minBalance = this.isPartake ? 1000 : 200;
-        if (this.accountInfo.balance < minBalance) {
-          this.$message({message: '对不起，您的余额不足，搭建链需要消耗' + minBalance + 'NULS', type: 'error', duration: 3000});
+      async confirm() {
+        //获取账户余额
+        this.balanceInfo = await getBalanceOrNonceByAddress(MAIN_INFO.chainId, MAIN_INFO.assetsId, this.accountInfo.address);
+
+        if (!this.balanceInfo.success) {
+          console.log("获取账户余额错误:" + JSON.stringify(this.balanceInfo.data));
+          return
+        }
+        this.accountInfo.balance = divisionDecimals(this.balanceInfo.data.balance);
+
+        let minBalance = this.isPartake ? CONSUME_NULS.make.total + CONSUME_NULS.cross.total : CONSUME_NULS.make.total;
+        if (Number(this.accountInfo.balance) < minBalance + 1) {
+          this.$message({
+            message: '对不起，您的余额不足，搭建链账户最小需要' + Number(minBalance + 1) + 'NULS',
+            type: 'error',
+            duration: 3000
+          });
         } else {
           this.$refs.password.showPassword(true);
         }
@@ -1083,36 +1150,34 @@
        * @date: 2019-10-18 16:14
        * @author: Wave
        */
-      async registerChainAndAsset(mainInfo, addressInfo, chainInfo, assetInfo) {
-        const balanceInfo = await
-          getBalanceOrNonceByAddress(mainInfo.chainId, mainInfo.assetsId, addressInfo.address);
-
-        if (!balanceInfo.success) {
-          console.log("获取账户余额错误:" + balanceInfo.data);
-          return
-        }
-
+      async registerChainAndAsset(mainInfo, addressInfo, chainInfo, assetInfo, toAddress) {
         let transferInfo = {
-          assetsChainId: 2,
-          assetsId: 1,
+          assetsChainId: mainInfo.chainId,
+          assetsId: mainInfo.assetsId,
           fee: 100000,
           from: {
             fromAddress: addressInfo.address,
-            amount: 100000000000
+            amount: CONSUME_NULS.make.total + CONSUME_NULS.cross.total
           },
-          to: [{
-            toAddress: addressInfo.address,
-            amount: 80000000000,
-            loctTime: -1
-          }, {
-            toAddress: nuls.getAddressByPub(MAIN_INFO.chainId, MAIN_INFO.assetsId, API_BURNING_ADDRESS_PUB, API_PREFIX),
-            amount: 20000000000
-          }]
+          to: [
+            {
+              toAddress: toAddress,
+              amount: timesDecimals(CONSUME_NULS.make.transfer),
+              loctTime: 0
+            }, {
+              toAddress: addressInfo.address,
+              amount: timesDecimals(CONSUME_NULS.cross.locking),
+              loctTime: -1
+            },
+            {
+              toAddress: nuls.getAddressByPub(MAIN_INFO.chainId, MAIN_INFO.assetsId, API_BURNING_ADDRESS_PUB, API_PREFIX),
+              amount: timesDecimals(CONSUME_NULS.cross.burn + CONSUME_NULS.make.burn)
+            }
+          ]
         };
         //console.log(transferInfo);
-        let inOrOutputs = await
-          mutiInputsOrOutputs(transferInfo, balanceInfo.data, 11);
-        //console.log(inOrOutputs);
+        let inOrOutputs = await mutiInputsOrOutputs(transferInfo, this.balanceInfo.data, 11);
+
         let tAssemble = [];//交易组装
         let txhex = "";//交易签名
         if (inOrOutputs.success) {
@@ -1122,26 +1187,22 @@
             assetInfo: assetInfo
           };
           //console.log(txData);
-          tAssemble = await
-            nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
+          tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
           //获取手续费
           let newFee = countFee(tAssemble, 1);
           //手续费大于0.001的时候重新组装交易及签名
           if (transferInfo.fee !== newFee) {
             transferInfo.fee = newFee;
-            inOrOutputs = await
-              mutiInputsOrOutputs(transferInfo, balanceInfo.data, 11);
-            tAssemble = await
-              nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
-            txhex = await
-              nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
+            inOrOutputs = await mutiInputsOrOutputs(transferInfo, this.balanceInfo.data, 11);
+            tAssemble = await nuls.transactionAssemble(inOrOutputs.data.inputs, inOrOutputs.data.outputs, '', 11, txData);
+            txhex = await nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
           } else {
-            txhex = await
-              nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
+            txhex = await nuls.transactionSerialize(addressInfo.pri, addressInfo.pub, tAssemble);
           }
         } else {
           return {success: false, data: inOrOutputs.data};
         }
+        //console.log(inOrOutputs);
         return {success: true, data: txhex};
       },
 
@@ -1154,8 +1215,7 @@
       async passSubmit(password) {
         let isPassword = passwordVerification(this.accountInfo, password);
         if (isPassword.success) {
-          let amount = timesDecimals(200);
-          let remark = '';
+          let amount = timesDecimals(CONSUME_NULS.make.total);
           let newTxhex = '';
           if (this.isPartake) {
             let chainInfo = {
@@ -1177,19 +1237,24 @@
               initNumber: this.infoForm.amount,
               decimalPlaces: this.infoForm.decimals
             };
-            newTxhex = await
-              this.registerChainAndAsset(MAIN_INFO, isPassword, chainInfo, assetInfo);
+            newTxhex = await this.registerChainAndAsset(MAIN_INFO, isPassword, chainInfo, assetInfo, this.destroyAddress);
           } else {
-            newTxhex = await
-              transferTransaction(isPassword.pri, isPassword.pub, isPassword.address, this.destroyAddress, MAIN_INFO.chainId, MAIN_INFO.assetsId, amount, remark);
+            let transferInfo = {
+              fromAddress: isPassword.address,
+              toAddress: this.destroyAddress,
+              chainId: MAIN_INFO.chainId,
+              assetsId: MAIN_INFO.assetsId,
+              amount: amount,
+              fee: 100000
+            };
+            newTxhex = await transferTransaction(isPassword, transferInfo, this.balanceInfo);
           }
-          console.log(newTxhex);
+          //console.log(newTxhex);
           if (!newTxhex.success) {
             this.$message({message: '搭建链交易签名错误:' + newTxhex.data, type: 'error', duration: 3000});
             return
           }
-          let newHash = await
-            validateAndBroadcast(newTxhex.data);
+          let newHash = await validateAndBroadcast(newTxhex.data);
           console.log(newHash);
           if (!newHash.success) {
             this.$message({message: '搭建链转账验证广播交易错误:' + JSON.stringify(newHash.data), type: 'error', duration: 3000});
