@@ -138,7 +138,7 @@ export async function mutiInputsOrOutputs(transferInfo, balanceInfo) {
       assetsChainId: transferInfo.assetsChainId,
       assetsId: transferInfo.assetsId,
       amount: to.amount,
-      lockTime: to.lockTime ? to.lockTime : 0
+      lockTime: to.lockTime
     })
   }
   return {success: true, data: {inputs: inputs, outputs: outputs}};

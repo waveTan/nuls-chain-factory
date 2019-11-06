@@ -1,37 +1,33 @@
 <template>
   <div class="home">
-    <div class="carousel">
-      <el-carousel :interval="5000" arrow="always" height="400px">
-        <el-carousel-item v-for="item in 4" :key="item">
-          <h3><img src="./../assets/img/bank.png"/></h3>
+    <div class="carousel cb">
+      <el-carousel :interval="5000" arrow="always" :height="carouselHeight">
+        <el-carousel-item v-for="item in 1" :key="item">
+          <div class="carousel_bg"><img src="./../assets/img/bank.png"/></div>
         </el-carousel-item>
       </el-carousel>
     </div>
     <div class="w1200 bg-white">
       <div class="left fl">
-        <p>
-          通过NULS链工厂，企业/个人不再需要深入钻研区块链底层技术。仅需进行简单的配置工作，就能得到一条完全属于自己的区块链。
-        </p>
+        <p>{{$t('home.home0')}}</p>
         <el-row>
-          <el-button>了解区块链架构</el-button>
-          <el-button type="success" @click="toUrl('build')">前往搭建区块链</el-button>
+          <el-button>{{$t('home.home1')}}</el-button>
+          <el-button type="success" @click="toUrl('build')">{{$t('home.home2')}}</el-button>
         </el-row>
       </div>
-      <div class="right fr">
+      <div class="right fr pc">
         <img style="margin: 50px 0 0 0" src="./../assets/img/1.png"/>
       </div>
     </div>
     <div class="bg-gray">
       <div class="w1200">
-        <div class="left fl">
-          <img  style="margin: 30px 0 0 0" src="./../assets/img/2.png"/>
+        <div class="left fl pc">
+          <img style="margin: 30px 0 0 0" src="./../assets/img/2.png"/>
         </div>
         <div class="right fr">
-          <p>
-            微服务架构，支持根据实际业务定制化开发和现有模块进行结合。
-          </p>
+          <p>{{$t('home.home3')}}</p>
           <el-row>
-            <el-button type="success" @click="toUrl('build')">前往搭建区块链</el-button>
+            <el-button type="success" @click="toUrl('build')">{{$t('home.home2')}}</el-button>
           </el-row>
         </div>
       </div>
@@ -46,9 +42,12 @@
     data() {
       return {
         addressInfo: JSON.parse(localStorage.getItem(chainIdNumber())),//地址信息
+        isMobile: /(iPhone|iOS|Android|Windows Phone)/i.test(navigator.userAgent),//访问界面终端
+        carouselHeight: this.isMobile ? '10rem' : '400px'
       };
     },
     created() {
+      console.log(this.isMobile)
     },
     methods: {
 
@@ -71,11 +70,33 @@
       height: 400px;
       width: 100%;
       border-bottom: 1px solid #5e6983;
+      .carousel_bg {
+        width: 100%;
+        text-align: center;
+        background-color: #141526;
+        img {
+          height: 100%;
+        }
+      }
+
+      @media screen and (max-width: 1000px) {
+        height: 10rem;
+        img {
+          height: 100%;
+          width: 100%;
+        }
+      }
     }
     .w1200 {
       height: 450px;
+      @media screen and (max-width: 1000px) {
+        height: 20rem;
+      }
       .left, .right {
         width: 50%;
+        @media screen and (max-width: 1000px) {
+          width: 100%;
+        }
         p {
           font-size: 18px;
           font-weight: bold;
@@ -83,6 +104,11 @@
           color: #000000;
           width: 500px;
           margin: 100px auto 70px;
+          @media screen and (max-width: 1000px) {
+            width: 100%;
+            margin: 2rem auto 1.5rem;
+            padding: 0 0.5rem;
+          }
         }
         .el-button {
           display: block;

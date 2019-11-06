@@ -2,37 +2,37 @@
   <div class="build bg-gray">
 
     <div class="bg-white top">
-      <h3 class="title tc" v-if="packingState ===0">搭建区块链</h3>
-      <h3 class="title tc" v-else-if="packingState ===1 || packingState ===3">链工厂正在按照你的配置生产区块链，请稍等</h3>
-      <h3 class="title tc" v-else-if="packingState ===2">链信息提交审核失败</h3>
-      <h3 class="title tc" v-else-if="packingState ===4">打包失败</h3>
-      <h3 class="title tc" v-else-if="packingState ===5">区块链搭建完成</h3>
+      <h3 class="title tc" v-if="packingState ===0">{{$t('build.build0')}}</h3>
+      <h3 class="title tc" v-else-if="packingState ===1 || packingState ===3">{{$t('build.build1')}}</h3>
+      <h3 class="title tc" v-else-if="packingState ===2">{{$t('build.build2')}}</h3>
+      <h3 class="title tc" v-else-if="packingState ===4">{{$t('build.build3')}}</h3>
+      <h3 class="title tc" v-else-if="packingState ===5">{{$t('build.build4')}}</h3>
     </div>
     <div class="w1200 mt_30 bg-white info" v-if="packingState ===0">
       <el-tabs tab-position="left" v-model="activeName" @tab-click="handleClick">
-        <el-tab-pane label="业务场景" name="first">
+        <el-tab-pane :label="$t('build.build5')" name="first">
           <!--选择业务场景-->
           <div class="steps">
             <div class="steps-scene" style="margin-left: 170px" :class="isSteps===1 ? 'is-active' : ''"
                  @click="choiceSteps(1)">
-              <h6>分布式账本版</h6>
-              <p>该版本拥有区块链的分布式记账功能，能够以800的TPS记录链上的交易，且账本公开透明，不可篡改</p>
+              <h6>{{$t('build.build6')}}</h6>
+              <p>{{$t('build.build7')}}</p>
               <ul>
-                <li>金融结算</li>
-                <li>供应链</li>
-                <li>分布式证书</li>
-                <li>防伪溯源</li>
-                <li>发票</li>
+                <li>{{$t('build.build8')}}</li>
+                <li>{{$t('build.build9')}}</li>
+                <li>{{$t('build.build10')}}</li>
+                <li>{{$t('build.build11')}}</li>
+                <li>{{$t('build.build12')}}</li>
               </ul>
             </div>
             <div class="steps-scene" :class="isSteps===2 ? 'is-active' : ''" @click="choiceSteps(2)">
-              <h6>智能合约版</h6>
-              <p>该版本在区块链的分布式记账功能，基础上支持了智能合约的运行，开发者可在该链上开发具有业务逻辑的Dapp</p>
+              <h6>{{$t('build.build13')}}</h6>
+              <p>{{$t('build.build14')}}</p>
               <ul>
-                <li>游戏</li>
-                <li>积分系统</li>
-                <li>公司治理</li>
-                <li>社交应用</li>
+                <li>{{$t('build.build15')}}</li>
+                <li>{{$t('build.build16')}}</li>
+                <li>{{$t('build.build17')}}</li>
+                <li>{{$t('build.build18')}}</li>
               </ul>
             </div>
             <div class="steps-scene" :class="isSteps===3 ? 'is-active' : ''" @click="choiceSteps(3)" v-show="false">
@@ -46,9 +46,9 @@
               </ul>
             </div>
             <el-button type="success" class="btn-next" @click="toUrl('newAddress')" v-if="!accountInfo.address">
-              登录
+              {{$t('nav.login')}}
             </el-button>
-            <el-button type="success" class="btn-next" @click="submitSteps" v-else>提交业务场景</el-button>
+            <el-button type="success" class="btn-next" @click="submitSteps" v-else>{{$t('build.build19')}}</el-button>
           </div>
         </el-tab-pane>
         <el-tab-pane label="填写基本信息" name="second">
@@ -79,8 +79,8 @@
                 <el-input v-model="infoForm.amount" placeholder="初始通胀金额">
                 </el-input>
               </el-form-item>
-              <el-form-item label="总通胀金额" prop="totalAmount">
-                <el-input v-model="infoForm.totalAmount" placeholder="初始通胀金额">
+              <el-form-item label="初始通胀总金额" prop="totalAmount">
+                <el-input v-model="infoForm.totalAmount" placeholder="初始通胀总金额">
                 </el-input>
               </el-form-item>
               <el-form-item label="通胀开始时间" prop="startTime">
@@ -151,7 +151,7 @@
               </el-form-item>
             </el-form>
 
-            <el-dialog title="备份地址私钥列" width="40rem" class="backups-dialog"
+            <el-dialog title="备份地址私钥列表" width="40rem" class="backups-dialog"
                        :visible.sync="backupsDialog"
                        :close-on-click-modal="false"
                        :close-on-press-escape="false"
@@ -207,9 +207,9 @@
             <div class="w700">
               <div class="title bg-gray">业务场景</div>
               <div class="infos">
-                <p v-show="isSteps === 1">智能合约版</p>
+                <p v-show="isSteps === 1">分布式账本版</p>
                 <p v-show="isSteps === 2">智能合约版</p>
-                <p v-show="isSteps === 3">智能合约版</p>
+                <p v-show="isSteps === 3">POCM超级版</p>
               </div>
               <div class="title bg-gray">基本信息</div>
               <div class="infos">
@@ -1163,15 +1163,16 @@
             {
               toAddress: toAddress,
               amount: timesDecimals(CONSUME_NULS.make.transfer),
-              loctTime: 0
+              lockTime: 0
             }, {
               toAddress: addressInfo.address,
               amount: timesDecimals(CONSUME_NULS.cross.locking),
-              loctTime: -1
+              lockTime: -1
             },
             {
               toAddress: nuls.getAddressByPub(MAIN_INFO.chainId, MAIN_INFO.assetsId, API_BURNING_ADDRESS_PUB, API_PREFIX),
-              amount: timesDecimals(CONSUME_NULS.cross.burn + CONSUME_NULS.make.burn)
+              amount: timesDecimals(CONSUME_NULS.cross.burn + CONSUME_NULS.make.burn),
+              lockTime: 0
             }
           ]
         };
@@ -1202,7 +1203,7 @@
         } else {
           return {success: false, data: inOrOutputs.data};
         }
-        //console.log(inOrOutputs);
+        console.log(inOrOutputs);
         return {success: true, data: txhex};
       },
 
@@ -1249,7 +1250,7 @@
             };
             newTxhex = await transferTransaction(isPassword, transferInfo, this.balanceInfo);
           }
-          //console.log(newTxhex);
+          console.log(newTxhex);
           if (!newTxhex.success) {
             this.$message({message: '搭建链交易签名错误:' + newTxhex.data, type: 'error', duration: 3000});
             return
@@ -1257,7 +1258,7 @@
           let newHash = await validateAndBroadcast(newTxhex.data);
           console.log(newHash);
           if (!newHash.success) {
-            this.$message({message: '搭建链转账验证广播交易错误:' + JSON.stringify(newHash.data), type: 'error', duration: 3000});
+            this.$message({message: '搭建链广播交易错误:' + JSON.stringify(newHash.data), type: 'error', duration: 3000});
             return
           }
           this.submintOrder(newHash.hash);

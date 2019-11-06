@@ -1,6 +1,6 @@
 <template>
   <div class="header bg-white">
-    <div class="w1200">
+    <div class="w1200 pc">
       <div class="logo fl">
         <img class="clicks" @click="toUrl('home')" :src="logoSvg">
       </div>
@@ -35,6 +35,9 @@
         </div>
 
       </div>
+    </div>
+    <div class="mobile font16">
+      首页
     </div>
     <Password ref="password" @passwordSubmit="passSubmit">
     </Password>
@@ -194,92 +197,99 @@
   @import "./../assets/css/style";
 
   .header {
-    border-bottom: 1px solid #bebebe;
-    height: 100px;
-    line-height: 100px;
-    .logo {
-      width: 104px;
-      margin: 18px 0 0 0;
-      height: 42px;
-      img {
-        width: 100px;
+    .pc{
+      border-bottom: 1px solid #bebebe;
+      height: 100px;
+      line-height: 100px;
+      width: 100%;
+      .logo {
+        width: 104px;
+        margin: 18px 0 0 0;
+        height: 42px;
+        img {
+          width: 100px;
+        }
       }
-    }
-    .nav {
-      width: 1095px;
-      height: 98px;
-      .el-menu.el-menu--horizontal {
-        border-bottom: 0;
-        width: 850px;
+      .nav {
+        width: 1095px;
         height: 98px;
-        .el-menu-item {
+        .el-menu.el-menu--horizontal {
+          border-bottom: 0;
+          width: 850px;
           height: 98px;
-          line-height: 100px;
-          padding: 0;
-          margin: 0 25px;
-          font-size: 18px;
-          color: #333;
-          &:hover {
+          .el-menu-item {
+            height: 98px;
+            line-height: 100px;
+            padding: 0;
+            margin: 0 25px;
+            font-size: 18px;
+            color: #333;
+            &:hover {
+              color: @Ncolour;
+            }
+            &:first-child {
+              margin-left: 75px;
+            }
+          }
+          .is-active {
             color: @Ncolour;
-          }
-          &:first-child {
-            margin-left: 75px;
+            border-bottom: 0 solid transparent;
           }
         }
-        .is-active {
-          color: @Ncolour;
-          border-bottom: 0 solid transparent;
-        }
-      }
-      .user {
-        .height {
-          width: 120px;
-          float: left;
-          line-height: 105px;
-        }
-        .user_info {
-          width: 28px;
-          .user_menu {
+        .user {
+          .height {
+            width: 120px;
+            float: left;
+            line-height: 105px;
+          }
+          .user_info {
             width: 28px;
-            text-align: center;
-            .el-submenu {
-              &:hover {
-                background-color: transparent;
-              }
-              .el-submenu__title {
-                line-height: 20px;
-                height: 20px;
-                margin: 40px auto 0;
-                padding: 0;
-                width: 25px;
-                border: 0;
+            .user_menu {
+              width: 28px;
+              text-align: center;
+              .el-submenu {
                 &:hover {
                   background-color: transparent;
                 }
-                .el-icon-arrow-down {
-                  font-size: 0;
+                .el-submenu__title {
+                  line-height: 20px;
+                  height: 20px;
+                  margin: 40px auto 0;
+                  padding: 0;
+                  width: 25px;
+                  border: 0;
+                  &:hover {
+                    background-color: transparent;
+                  }
+                  .el-icon-arrow-down {
+                    font-size: 0;
+                  }
                 }
               }
             }
           }
+          .language {
+            width: 70px;
+            line-height: 105px;
+            margin-left: 20px;
+          }
         }
-        .language {
-          width: 70px;
+        .landing {
+          width: 30px;
           line-height: 105px;
-          margin-left: 20px;
+          text-align: center;
+          z-index: 99;
+          position: relative;
         }
       }
-      .landing {
-        width: 30px;
-        line-height: 105px;
-        text-align: center;
-        z-index: 99;
-        position: relative;
+      .password-dialog {
+        line-height: 20px;
       }
     }
-    .password-dialog {
-      line-height: 20px;
+    .mobile{
+      text-align: center;
     }
+
   }
   .el-message-box__wrapper {
     .el-message-box__content {

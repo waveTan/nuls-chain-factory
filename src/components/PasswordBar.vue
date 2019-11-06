@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="请输入密码" :visible.sync="passwordVisible" top="30vh" width="30rem"
+  <el-dialog :title="$t('tips.password0')" :visible.sync="passwordVisible" top="30vh" width="30rem"
              class="password-dialog"
              :close-on-click-modal="false"
              :close-on-press-escape="false"
@@ -7,14 +7,15 @@
              @close="passwordClose">
     <el-form ref="passwordForm" :model="passwordForm" :rules="passwordRules" @submit.native.prevent>
       <el-form-item prop="password">
-        <el-input v-model="passwordForm.password" type="password" :maxlength="22" ref="inpus"
+        <el-input v-model="passwordForm.password" type="password" ref="inpus"
+                  :maxlength="22"
                   @keyup.enter.native="enterSubmit('passwordForm')">
         </el-input>
       </el-form-item>
     </el-form>
     <div slot="footer" class="dialog-footer">
-      <el-button @click="passwordClose">取 消</el-button>
-      <el-button type="success" @click="dialogSubmit('passwordForm')" id="passwordInfo">确 定
+      <el-button @click="passwordClose">{{$t('public.cancel')}}</el-button>
+      <el-button type="success" @click="dialogSubmit('passwordForm')" id="passwordInfo">{{$t('public.confirm')}}
       </el-button>
     </div>
   </el-dialog>
@@ -26,7 +27,7 @@
     data() {
       let validatePass = (rule, value, callback) => {
         if (value === '') {
-          callback(new Error("请输入密码"))
+          callback(new Error(this.$t('tips.password0')))
         } else {
           callback()
         }
@@ -34,7 +35,7 @@
       return {
         passwordVisible: false,
         passwordForm: {
-          password: 'nuls123456',
+          password: '',
         },
         passwordRules: {
           password: [
@@ -71,13 +72,16 @@
       //密码框显示执行事件
       passwordShow() {
       },
+
       passwordClose() {
         this.$refs['passwordForm'].resetFields();
         this.passwordVisible = false;
       },
+
       showPassword(boolean) {
         this.passwordVisible = boolean;
       },
+
       //弹出密码输入框
       dialogSubmit(formName) {
         this.$refs[formName].validate((valid) => {
@@ -89,6 +93,7 @@
           }
         })
       },
+
     }
   }
 </script>

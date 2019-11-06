@@ -108,6 +108,10 @@ u {
 .w1200 {
   width: 1200px;
   margin: 0 auto;
+  @media screen and (max-width: 1000px) {
+    width: 100%;
+  }
+
 }
 
 .w630 {
@@ -123,16 +127,28 @@ u {
 .font12 {
   font-size: 12px;
   line-height: 12px;
+  @media screen and (max-width: 1000px) {
+    font-size: 0.6rem;
+    line-height:1rem;
+  }
 }
 
 .font14 {
   font-size: 14px;
-  line-height: 16px;
+  line-height: 14px;
+  @media screen and (max-width: 1000px) {
+    font-size: 0.7rem;
+    line-height:1.2rem;
+  }
 }
 
 .font16 {
   font-size: 16px;
   line-height: 16px;
+  @media screen and (max-width: 1000px) {
+    font-size: 1rem;
+    line-height:1.6rem;
+  }
 }
 
 .font18 {
@@ -370,5 +386,17 @@ pre {
   white-space: -pre-wrap;
   white-space: -o-pre-wrap;
   word-wrap: break-word;
+}
+
+.pc{
+  @media screen and (max-width: 1000px) {
+    display: none;
+  }
+}
+.mobile{
+  display: none;
+  @media screen and (max-width: 1000px) {
+    display: block;
+  }
 }
 
